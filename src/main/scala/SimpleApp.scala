@@ -22,11 +22,11 @@ Goal: For each testcase, show a diagram with the TTFB of each
 tr1   tr2  tr3
 
 CREATE TABLE source_data.testresults (
-    testresult_id text,
+    testcase_id text,
     datetime_run timestamp,
+    testresult_id text,
     har text,
     is_analyzed boolean,
-    testcase_id text,
     PRIMARY KEY (testcase_id, datetime_run)
 );
 
@@ -55,35 +55,43 @@ object SimpleApp {
     val sc = new SparkContext("spark://127.0.0.1:7077", "SimpleApp", conf)
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
 
-    val rowsRDD = sc.cassandraTable("source_data", "testresults")
+    val rowRDD = sc.cassandraTable("source_data", "testresults")
 
-    val harsRDD =
-      rowsRDD.map(
+    // Create RDD with a tuple of one Testresult ID to one HAR content per entry
+    val testresultIdToHarRDD =
+      rowRDD.map(
         row => {
-          row.get[String]("har")
+          (row.get[String]("testresult_id"), row.get[String]("har"))
         }
       )
 
-    val jsonsRDD = harsRDD.map(har => {
-      parse(har, false)
+    // Create RDD with a tuple of one Testresult ID to one JValue representing the HAR per entry
+    val testresultIdToJsonRDD = testresultIdToHarRDD.map(testresultIdToHar => {
+      (testresultIdToHar._1, parse(testresultIdToHar._2, false))
     })
 
-    val firstByteTimesRDD = jsonsRDD.map(json => {
+    // Create RDD with a tuple of one Testresult ID to one URL to one wait timing of the first request in each HAR per entry
+    val testresultIdToUrlToFirstByteTimeRDD = testresultIdToJsonRDD.map(testresultIdToJson => {
       implicit val formats = DefaultFormats
-      val entries = (json \ "log" \ "entries").children
+      val entries = (testresultIdToJson._2 \ "log" \ "entries").children
       if (!entries.isEmpty) {
         val url = (entries(0) \ "request" \ "url").extractOrElse[Option[String]](None)
         val firstByteTime = (entries(0) \ "timings" \ "wait").extractOrElse[Option[Int]](None)
-        (url, firstByteTime)
+        (testresultIdToJson._1, url, firstByteTime)
       } else {
-        (None, None)
+        (None, None, None)
       }
     })
 
-    val validFirstByteTimesRDD = firstByteTimesRDD.filter(firstByteTime => {
-      firstByteTime != (None, None)
+    val validTestresultIdToUrlToFirstByteTimeRDD = testresultIdToUrlToFirstByteTimeRDD.filter(testresultIdToUrlToFirstByteTime => {
+      testresultIdToUrlToFirstByteTime != (None, None, None)
     })
-    validFirstByteTimesRDD.saveToCassandra("source_data", "ttfbs", SomeColumns("url", "ttfb"))
+
+    validTestresultIdToUrlToFirstByteTimeRDD.saveToCassandra(
+      "source_data",
+      "ttfbs",
+      SomeColumns("testresult_id", "url", "ttfb")
+    )
 
   }
 }
