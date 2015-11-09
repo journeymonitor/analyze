@@ -48,7 +48,7 @@ foreach (testresult_id) ->
 
  */
 
-object SimpleApp {
+object SparkApp {
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("Simple Application")
     conf.set("spark.cassandra.connection.host", "127.0.0.1")
