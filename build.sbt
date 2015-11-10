@@ -12,6 +12,11 @@ lazy val testDependencies = Seq (
   "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 )
 
+lazy val cassandraDependencies = Seq (
+  "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.8",
+  "com.chrisomeara" % "pillar_2.11" % "2.0.1"
+)
+
 lazy val json4sDependencies = Seq (
   "org.json4s" %% "json4s-native" % "3.3.0"
 )
@@ -37,7 +42,7 @@ lazy val spark = project.in(file("spark"))
 
 lazy val importer = project.in(file("importer"))
   .settings(commonSettings:_*)
-  .settings(libraryDependencies ++= (json4sDependencies ++ testDependencies))
+  .settings(libraryDependencies ++= (json4sDependencies ++ testDependencies ++ cassandraDependencies))
 
 lazy val main = project.in(file("."))
   .aggregate(spark, importer)
