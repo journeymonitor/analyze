@@ -4,7 +4,15 @@ val commonSettings = Seq(
   organization := "com.journeymonitor",
   version := "0.1",
   scalaVersion := "2.11.7",
-  scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
+  scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8"),
+  // stole the following from https://github.com/datastax/spark-cassandra-connector/pull/858/files
+  // in order to avoid assembly merge errors with netty
+  assemblyMergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
+    {
+      case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.last
+      case x => old(x)
+    }
+  }
 )
 
 
@@ -31,14 +39,6 @@ lazy val sparkDependencies = Seq (
 lazy val spark = project.in(file("spark"))
   .settings(commonSettings:_*)
   .settings(libraryDependencies ++= (sparkDependencies ++ json4sDependencies))
-  // stole the following from https://github.com/datastax/spark-cassandra-connector/pull/858/files
-  // in order to avoid assembly merge errors with netty
-  .settings(assemblyMergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-    {
-      case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.last
-      case x => old(x)
-    }
-  })
 
 lazy val importer = project.in(file("importer"))
   .settings(commonSettings:_*)
