@@ -11,14 +11,15 @@ import org.json4s.native.JsonParser
 
 /*
 
-Goal: For each testcase, show a diagram with the TTFB of each
-      page that was requested in the last N testruns:
+Goal 1: For each testcase, show a diagram with the TTFB of each
+      page that was requested in the last N testruns, plus the number
+      of CSS request that occurred during each testrun
 
-#          #*
-# +   # +  #* o
-#*+   #*+  #*+o
-#*+   #*+  #*+o
-123   123  1234
+#            #*  =
+# +=   # +=  #* o=
+#*+=   #*+=  #*+o=
+#*+=   #*+=  #*+o=
+123C   123C  1234C
 tr1   tr2  tr3
 
 CREATE TABLE source_data.testresults (
@@ -30,6 +31,7 @@ CREATE TABLE source_data.testresults (
     PRIMARY KEY (testcase_id, datetime_run)
 );
 
+// ttfbs go here:
 CREATE TABLE source_data.ttfbs (
     testresult_id text,
     page_num int,
@@ -52,9 +54,8 @@ object SparkApp {
   def main(args: Array[String]) {
     val conf = new SparkConf().setAppName("Simple Application")
     conf.set("spark.cassandra.connection.host", "127.0.0.1")
-    val sc = new SparkContext("spark://127.0.0.1:7077", "SimpleApp", conf)
+    val sc = new SparkContext("spark://127.0.0.1:7077", "JourneyMonitor Analyze", conf)
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
-
     val rowRDD = sc.cassandraTable("source_data", "testresults")
 
     // Create RDD with a tuple of one Testresult ID to one HAR content per entry
@@ -68,7 +69,7 @@ object SparkApp {
     // Create RDD with a tuple of one Testresult ID to one JValue representing the HAR per entry
     val testresultIdToJsonRDD = testresultIdToHarRDD.map(testresultIdToHar => {
       (testresultIdToHar._1, parse(testresultIdToHar._2, false))
-    })
+    }).cache()
 
     // Create RDD with a tuple of one Testresult ID to one URL to one wait timing of the first request in each HAR per entry
     val testresultIdToUrlToFirstByteTimeRDD = testresultIdToJsonRDD.map(testresultIdToJson => {
@@ -93,8 +94,27 @@ object SparkApp {
       SomeColumns("testresult_id", "url", "ttfb")
     )
 
+    sc.stop();
+
   }
 }
+
+
+
+    /*
+    val rowRDD = sc.cassandraTable("source_data", "testresults")
+    val harRDD = rowRDD.map(_.get[String]("har"))
+    val jsonSchemaRDD = sqlContext.jsonRDD(harRDD)
+    jsonSchemaRDD.registerTempTable("har");
+    sqlContext.sql("SELECT * FROM har WHERE log.version = '1.2'")
+    val entriesRows = sqlContext.sql("SELECT log.entries FROM har")
+    val e = entriesRows.map(entriesRow => {
+      sqlContext.jsonRDD(entries.toJSON)
+    })
+     */
+
+
+
 
 /*
 
