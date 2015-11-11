@@ -58,7 +58,6 @@ object SparkApp {
     val conf = new SparkConf().setAppName("Simple Application")
     conf.set("spark.cassandra.connection.host", "127.0.0.1")
     val sc = new SparkContext("spark://127.0.0.1:7077", "JourneyMonitor Analyze", conf)
-    val sqlContext = new org.apache.spark.sql.SQLContext(sc)
 
     val rowRDD = sc.cassandraTable("analyze", "testresults")
 
