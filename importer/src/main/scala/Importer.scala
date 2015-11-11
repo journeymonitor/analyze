@@ -24,7 +24,7 @@ object Importer {
 
     implicit val formats = DefaultFormats
 
-    val uri = CassandraConnectionUri("cassandra://localhost:9042/source_data")
+    val uri = CassandraConnectionUri("cassandra://localhost:9042/analyze")
     val session = CassandraClient.createSessionAndInitKeyspace(uri)
 
     val stmt = session.prepare(

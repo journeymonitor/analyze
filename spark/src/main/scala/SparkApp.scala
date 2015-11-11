@@ -11,44 +11,47 @@ import org.json4s.native.JsonParser
 
 /*
 
-Goal 1: For each testcase, show a diagram with the TTFB of each
-      page that was requested in the last N testruns, plus the number
-      of CSS request that occurred during each testrun
+Goal 1:
+  For each testcase, show a diagram with the some statistics
+  on the requests of the last N testruns, like overall run time,
+  # of 2xx, 4xx, 5xx responses etc.:
 
-#            #*  =
-# +=   # +=  #* o=
-#*+=   #*+=  #*+o=
-#*+=   #*+=  #*+o=
-123C   123C  1234C
-tr1   tr2  tr3
+tr1       tr2
+  *       * *
+* *       * *
+* *       * *
+* *       * * *
+* * *     * * * *
+t 2 4 5   t 2 4 5
+i x x x   i x x x
+m x x x   m x x x
+e         e
 
-CREATE TABLE source_data.testresults (
+CREATE KEYSPACE IF NOT EXISTS analyze WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': 1 };
+
+CREATE TABLE analyze.testresults (
     testcase_id text,
-    datetime_run timestamp,
     testresult_id text,
+    datetime_run timestamp,
     har text,
     is_analyzed boolean,
-    PRIMARY KEY (testcase_id, datetime_run)
-);
+    PRIMARY KEY ((testcase_id), datetime_run)
+) WITH CLUSTERING ORDER BY (datetime_run DESC);
 
-// ttfbs go here:
-CREATE TABLE source_data.ttfbs (
+CREATE TABLE analyze.statistics (
+    testcase_id text,
     testresult_id text,
-    page_num int,
-    url text,
-    ttfb int,
-    PRIMARY KEY (testresult_id)
-);
+    datetime_run timestamp,
+    runtime_milliseconds int,
+    number_of_200 int,
+    number_of_400 int,
+    number_of_500 int,
+    PRIMARY KEY ((testcase_id), datetime_run)
+) WITH CLUSTERING ORDER BY (datetime_run DESC);
 
-SELECT testresult_id FROM testresults WHERE testcase_id = 'abcd' ORDER BY datetime_run DESC LIMIT 10;
+SELECT * FROM statistics WHERE testcase_id = 'a' LIMIT 10; // will be ORDER BY datetime_run DESC automatically
 
-foreach (testresult_id) ->
-  SELECT page_num, url, ttfb FROM ttfbs WHERE testresult_id = 'xyz'
-
-  foreach (page_num, url, ttfb) ->
-    DRAW CHART for testresult_id
-
- */
+*/
 
 object SparkApp {
   def main(args: Array[String]) {
@@ -56,42 +59,57 @@ object SparkApp {
     conf.set("spark.cassandra.connection.host", "127.0.0.1")
     val sc = new SparkContext("spark://127.0.0.1:7077", "JourneyMonitor Analyze", conf)
     val sqlContext = new org.apache.spark.sql.SQLContext(sc)
-    val rowRDD = sc.cassandraTable("source_data", "testresults")
 
-    // Create RDD with a tuple of one Testresult ID to one HAR content per entry
-    val testresultIdToHarRDD =
+    val rowRDD = sc.cassandraTable("analyze", "testresults")
+
+    // Create RDD with a tuple of Testcase ID, Testresult ID, DateTime of Run, HAR per entry
+    val testrunRDD =
       rowRDD.map(
         row => {
-          (row.get[String]("testresult_id"), row.get[String]("har"))
+          (row.get[String]("testcase_id"), row.get[String]("testresult_id"), row.get[java.util.Date]("datetime_run"), parse(row.get[String]("har"), false))
         }
-      )
+      ).cache()
 
-    // Create RDD with a tuple of one Testresult ID to one JValue representing the HAR per entry
-    val testresultIdToJsonRDD = testresultIdToHarRDD.map(testresultIdToHar => {
-      (testresultIdToHar._1, parse(testresultIdToHar._2, false))
-    }).cache()
-
-    // Create RDD with a tuple of one Testresult ID to one URL to one wait timing of the first request in each HAR per entry
-    val testresultIdToUrlToFirstByteTimeRDD = testresultIdToJsonRDD.map(testresultIdToJson => {
+    // Create RDD with a tuple of Testcase ID, Testresult ID, DateTime of Run, sum req time, #2xx, #4xx, #5xx per entry
+    val statisticRDD = testrunRDD.map(testrun => {
       implicit val formats = DefaultFormats
-      val entries = (testresultIdToJson._2 \ "log" \ "entries").children
-      if (!entries.isEmpty) {
-        val url = (entries(0) \ "request" \ "url").extractOrElse[Option[String]](None)
-        val firstByteTime = (entries(0) \ "timings" \ "wait").extractOrElse[Option[Int]](None)
-        (testresultIdToJson._1, url, firstByteTime)
-      } else {
-        (None, None, None)
-      }
+
+      val (testcaseId, testresultId, datetimeRun, har) = testrun
+      val entries = (har \ "log" \ "entries").children
+
+      val hits200 = for { entry <- entries if ((entry \ "response" \ "status").extract[Int] >= 200 && (entry \ "response" \ "status").extract[Int] < 300) } yield 1
+      val num200 = if (hits200.isEmpty) 0 else hits200.reduce(_ + _)
+
+      val hits400 = for { entry <- entries if ((entry \ "response" \ "status").extract[Int] >= 400 && (entry \ "response" \ "status").extract[Int] < 500) } yield 1
+      val num400 = if (hits400.isEmpty) 0 else hits400.reduce(_ + _)
+
+      val hits500 = for { entry <- entries if ((entry \ "response" \ "status").extract[Int] >= 500 && (entry \ "response" \ "status").extract[Int] < 600) } yield 1
+      val num500 = if (hits500.isEmpty) 0 else hits500.reduce(_ + _)
+
+      val times = for { entry <- entries } yield (entry \ "time").extract[Int]
+      val time = if (times.isEmpty) 0 else times.reduce(_ + _)
+
+      (testcaseId, testresultId, datetimeRun, time, num200, num400, num500)
     })
 
+    /*
     val validTestresultIdToUrlToFirstByteTimeRDD = testresultIdToUrlToFirstByteTimeRDD.filter(testresultIdToUrlToFirstByteTime => {
       testresultIdToUrlToFirstByteTime != (None, None, None)
     })
+    */
 
-    validTestresultIdToUrlToFirstByteTimeRDD.saveToCassandra(
-      "source_data",
-      "ttfbs",
-      SomeColumns("testresult_id", "url", "ttfb")
+    statisticRDD.saveToCassandra(
+      "analyze",
+      "statistics",
+      SomeColumns(
+        "testcase_id",
+        "testresult_id",
+        "datetime_run",
+        "runtime_milliseconds",
+        "number_of_200",
+        "number_of_400",
+        "number_of_500"
+      )
     )
 
     sc.stop();
