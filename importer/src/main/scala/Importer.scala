@@ -32,7 +32,7 @@ object Importer {
       "(testcase_id, datetime_run, testresult_id, har, is_analyzed) " +
       "VALUES (?, ?, ?, ?, ?);")
 
-    val filename = args(0)
+    val filename = if (args.length == 0) "" else (args(0))
     val jsonString = try {
       scala.io.Source.fromFile(filename).mkString
     } catch {
