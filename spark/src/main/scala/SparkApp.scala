@@ -3,16 +3,17 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.sql._
 import com.datastax.spark.connector._
 import org.json4s._
-import org.json4s.jackson.JsonMethods
-import org.json4s.jackson.JsonMethods._
+import org.json4s.native.JsonMethods
+import org.json4s.native.JsonMethods._
 import org.json4s.JsonAST._
 import org.json4s.DefaultFormats
 import org.json4s.native.JsonParser
+import org.apache.log4j.{Level, Logger}
 
 /*
 
 Goal 1:
-  For each testcase, show a diagram with the some statistics
+  For each testcase, show a diagram with some statistics
   on the requests of the last N testruns, like overall run time,
   # of 2xx, 4xx, 5xx responses etc.:
 
@@ -53,27 +54,42 @@ SELECT * FROM statistics WHERE testcase_id = 'a' LIMIT 10; // will be ORDER BY d
 
 */
 
+// In order to avoid "java.io.NotSerializableException: org.apache.log4j.Logger"
+object SerializableLogger extends Serializable {
+  @transient lazy val log = Logger.getLogger(getClass.getName)
+  log.setLevel(Level.INFO)
+}
+
 object SparkApp {
   def main(args: Array[String]) {
+    val log = Logger.getLogger(getClass.getName)
+    SerializableLogger.log.info("Starting...")
+
     val conf = new SparkConf().setAppName("Simple Application")
+    conf.set("spark.default.parallelism", "2")
     conf.set("spark.cassandra.connection.host", "127.0.0.1")
     val sc = new SparkContext("spark://127.0.0.1:7077", "JourneyMonitor Analyze", conf)
 
     val rowRDD = sc.cassandraTable("analyze", "testresults")
 
     // Create RDD with a tuple of Testcase ID, Testresult ID, DateTime of Run, HAR per entry
+    // Not calling .cache() because that result in OOM
     val testrunRDD =
       rowRDD.map(
         row => {
           (row.get[String]("testcase_id"), row.get[String]("testresult_id"), row.get[java.util.Date]("datetime_run"), parse(row.get[String]("har"), false))
         }
-      ).cache()
+      )
 
     // Create RDD with a tuple of Testcase ID, Testresult ID, DateTime of Run, sum req time, #2xx, #4xx, #5xx per entry
     val statisticRDD = testrunRDD.map(testrun => {
       implicit val formats = DefaultFormats
 
       val (testcaseId, testresultId, datetimeRun, har) = testrun
+
+      val startTime = System.currentTimeMillis
+      SerializableLogger.log.info(s"Starting to analyze testcase $testcaseId, testresult $testresultId from $datetimeRun")
+
       val entries = (har \ "log" \ "entries").children
 
       val hits200 = for { entry <- entries if ((entry \ "response" \ "status").extract[Int] >= 200 && (entry \ "response" \ "status").extract[Int] < 300) } yield 1
@@ -88,15 +104,14 @@ object SparkApp {
       val times = for { entry <- entries } yield (entry \ "time").extract[Int]
       val time = if (times.isEmpty) 0 else times.reduce(_ + _)
 
+      val runTime = System.currentTimeMillis - startTime
+      SerializableLogger.log.info(s"Finished analyzing testcase $testcaseId, testresult $testresultId from $datetimeRun after ${runTime}ms")
+
       (testcaseId, testresultId, datetimeRun, time, num200, num400, num500)
     })
 
-    /*
-    val validTestresultIdToUrlToFirstByteTimeRDD = testresultIdToUrlToFirstByteTimeRDD.filter(testresultIdToUrlToFirstByteTime => {
-      testresultIdToUrlToFirstByteTime != (None, None, None)
-    })
-    */
-
+    val startTime = System.currentTimeMillis
+    SerializableLogger.log.info(s"Starting write to Cassandra...")
     statisticRDD.saveToCassandra(
       "analyze",
       "statistics",
@@ -110,31 +125,15 @@ object SparkApp {
         "number_of_500"
       )
     )
+    val runTime = System.currentTimeMillis - startTime
+    SerializableLogger.log.info(s"Finished write to Cassandra after ${runTime}ms")
 
-    sc.stop();
+    sc.stop()
 
   }
 }
 
-
-
-    /*
-    val rowRDD = sc.cassandraTable("source_data", "testresults")
-    val harRDD = rowRDD.map(_.get[String]("har"))
-    val jsonSchemaRDD = sqlContext.jsonRDD(harRDD)
-    jsonSchemaRDD.registerTempTable("har");
-    sqlContext.sql("SELECT * FROM har WHERE log.version = '1.2'")
-    val entriesRows = sqlContext.sql("SELECT log.entries FROM har")
-    val e = entriesRows.map(entriesRow => {
-      sqlContext.jsonRDD(entries.toJSON)
-    })
-     */
-
-
-
-
 /*
-
 
 {
   "log": {
@@ -2121,6 +2120,5 @@ object SparkApp {
     "comment": ""
   }
 }
-
 
  */
