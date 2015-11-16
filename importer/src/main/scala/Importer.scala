@@ -17,6 +17,17 @@ import scala.io.BufferedSource
     "output":"",
     "failScreenshotFilename":null|"",
     "har":""
+   }
+
+   Each entry is on one single line of its own, and all entries are part of one large array:
+
+   [
+    {...},
+    {...},
+    {...},
+    {...}
+   ]
+
  */
 
 object Importer {
@@ -33,37 +44,45 @@ object Importer {
       "VALUES (?, ?, ?, ?, ?);")
 
     val filename = if (args.length == 0) "" else (args(0))
-    val jsonString = try {
-      scala.io.Source.fromFile(filename).mkString
+
+    try {
+      scala.io.Source.fromFile(filename).getLines().foreach(line => {
+        if (!line.startsWith("[") && !line.startsWith("]")) {
+          val normalizedLine = if (line.endsWith(",")) { // last line will not end with a comma
+            line.take(line.length - 1)
+          } else {
+            line
+          }
+          val entryJson = parse(normalizedLine)
+          val format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+          val datetimeRun = format.parse((entryJson \ "datetimeRun").extract[String])
+          val boundStmt = stmt.bind(
+            (entryJson \ "testcaseId").extract[String],
+            datetimeRun,
+            (entryJson \ "id").extract[String],
+            (entryJson \ "har").extract[String]
+            // simply passing `false` here results in "the result type of an implicit conversion must be more specific than AnyRef"
+          )
+          boundStmt.setBool(4, false)
+          try {
+            session.execute(boundStmt)
+            println("Added Testresult " + (entryJson \ "id").extract[String] + " from " + datetimeRun + " for Testcase " + (entryJson \ "testcaseId").extract[String])
+          } catch {
+            case e: Exception => {
+              println("Could not add testresult " + (entryJson \ "id").extract[String] + " from " + datetimeRun + " for Testcase " + (entryJson \ "testcaseId").extract[String])
+              println(e)
+            }
+          }
+        }
+      })
     } catch {
       case e: Exception => {
         println(e)
-        ""
+        session.close()
+        session.getCluster.close()
+        System.exit(1)
       }
     }
-
-    if (jsonString == "") {
-      session.close()
-      session.getCluster.close()
-      System.exit(1)
-    }
-
-    val json = parse(jsonString)
-    val entries = json.children
-    entries.foreach(entry => {
-      val format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-      val datetimeRun = format.parse((entry \ "datetimeRun").extract[String])
-      val boundStmt = stmt.bind(
-        (entry \ "testcaseId").extract[String],
-        datetimeRun,
-        (entry \ "id").extract[String],
-        (entry \ "har").extract[String]
-        // simply passing `false` here results in "the result type of an implicit conversion must be more specific than AnyRef"
-      )
-      boundStmt.setBool(4, false)
-      session.execute(boundStmt)
-      println("Added Testresult " + (entry \ "id").extract[String] + " for Testcase " + (entry \ "testcaseId").extract[String])
-    })
 
     session.close()
     session.getCluster.close()
