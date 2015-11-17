@@ -30,7 +30,6 @@ lazy val json4sDependencies = Seq (
 
 lazy val sparkDependencies = Seq (
   "org.apache.spark" %% "spark-core" % "1.5.1" % "provided",
-  "org.apache.spark" %% "spark-sql" % "1.5.1" % "provided",
   "com.datastax.spark" %% "spark-cassandra-connector" % "1.5.0-M2"
 )
 

@@ -3,7 +3,6 @@ package com.journeymonitor.analyze.sparkapp
 import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql._
 import com.datastax.spark.connector._
 import org.json4s
 import org.json4s._
@@ -12,7 +11,9 @@ import org.json4s.native.JsonMethods._
 import org.json4s.JsonAST._
 import org.json4s.DefaultFormats
 import org.json4s.native.JsonParser
-import org.apache.log4j.{Level, Logger}
+import org.apache.log4j.LogManager
+import org.apache.log4j.Level
+import org.apache.log4j.PropertyConfigurator
 
 /*
 
@@ -71,12 +72,6 @@ case class Statistics(testcaseId: String,
                       numberOfRequestsWithStatus400: Int,
                       numberOfRequestsWithStatus500: Int)
 
-// In order to avoid "java.io.NotSerializableException: org.apache.log4j.Logger"
-object SerializableLogger extends Serializable {
-  @transient lazy val log = Logger.getLogger(getClass.getName)
-  log.setLevel(Level.INFO)
-}
-
 object HarAnalyzer {
   private def calculateNumberOfRequestsWithResponseStatus(status: Int, testresult: Testresult): Int = {
     implicit val formats = org.json4s.DefaultFormats
@@ -97,6 +92,8 @@ object HarAnalyzer {
 
   def calculateRequestStatistics(testresultsRDD: RDD[Testresult]): RDD[Statistics] = {
     testresultsRDD.map(testresult => {
+      val log = LogManager.getRootLogger()
+      log.info(s"Calculating statistics for testresult ${testresult.testresultId}")
       Statistics(
         testcaseId = testresult.testcaseId,
         testresultId = testresult.testresultId,
@@ -112,8 +109,6 @@ object HarAnalyzer {
 
 object SparkApp {
   def main(args: Array[String]) {
-    val log = Logger.getLogger(getClass.getName)
-    SerializableLogger.log.info("Starting...")
 
     val conf = new SparkConf().setAppName("JourneyMonitor Analyze")
     conf.set("spark.default.parallelism", "2")
@@ -131,15 +126,13 @@ object SparkApp {
             testcaseId = row.get[String]("testcase_id"),
             testresultId = row.get[String]("testresult_id"),
             datetimeRun = row.get[java.util.Date]("datetime_run"),
-            har = parse(row.get[String]("har"), false)
+            har = parse(row.get[Option[String]]("har").getOrElse(""), false)
           )
         }
       )
 
     val statisticsRDD = HarAnalyzer.calculateRequestStatistics(testresultsRDD)
 
-    val startTime = System.currentTimeMillis
-    SerializableLogger.log.info(s"Starting write to Cassandra...")
     statisticsRDD.saveToCassandra(
       "analyze",
       "statistics",
@@ -153,8 +146,6 @@ object SparkApp {
         "number_of_500"        as "numberOfRequestsWithStatus500"
       )
     )
-    val runTime = System.currentTimeMillis - startTime
-    SerializableLogger.log.info(s"Finished write to Cassandra after ${runTime}ms")
 
     sc.stop()
 
