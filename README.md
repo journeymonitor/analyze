@@ -14,7 +14,7 @@
 - cd to the root folder of your Spark installation
 - `./sbin/start-master.sh --host 127.0.0.1`
 - `./sbin/start-slave.sh spark://127.0.0.1:7077`
-- `./bin/spark-submit --deploy-mode cluster --master spark://127.0.0.1:6066 PATH/TO/APPDIR/spark/target/scala-2.11/spark-assembly-0.1.jar`
+- `./bin/spark-submit --deploy-mode cluster --master spark://127.0.0.1:6066 --executor-memory 12g PATH/TO/APPDIR/spark/target/scala-2.11/spark-assembly-0.1.jar`
 
 
 ### Run Spark shell with dependencies
