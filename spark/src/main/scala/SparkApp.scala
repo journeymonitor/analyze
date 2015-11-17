@@ -120,14 +120,19 @@ object SparkApp {
     // Create RDD with a tuple of Testcase ID, Testresult ID, DateTime of Run, HAR per entry
     // Not calling .cache() because that result in OOM
     val testresultsRDD =
-      rowsRDD.map(
+      rowsRDD.flatMap(
         row => {
-          Testresult(
-            testcaseId = row.get[String]("testcase_id"),
-            testresultId = row.get[String]("testresult_id"),
-            datetimeRun = row.get[java.util.Date]("datetime_run"),
-            har = parse(row.get[Option[String]]("har").getOrElse(""), false)
-          )
+          try { // filter out entries with malformed data
+            Seq(
+              Testresult(
+                testcaseId = row.get[String]("testcase_id"),
+                testresultId = row.get[String]("testresult_id"),
+                datetimeRun = row.get[java.util.Date]("datetime_run"),
+                har = parse(row.get[String]("har"), false)
+              ))
+          } catch {
+            case e: Exception => Seq()
+          }
         }
       )
 
