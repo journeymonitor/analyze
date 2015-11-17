@@ -38,7 +38,7 @@ lazy val sparkDependencies = Seq (
 
 lazy val spark = project.in(file("spark"))
   .settings(commonSettings:_*)
-  .settings(libraryDependencies ++= (sparkDependencies ++ json4sDependencies))
+  .settings(libraryDependencies ++= (sparkDependencies ++ json4sDependencies ++ testDependencies))
 
 lazy val importer = project.in(file("importer"))
   .settings(commonSettings:_*)
