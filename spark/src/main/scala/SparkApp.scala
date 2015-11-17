@@ -1,7 +1,11 @@
+package com.journeymonitor.analyze.sparkapp
+
 import org.apache.spark._
 import org.apache.spark.SparkContext._
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import com.datastax.spark.connector._
+import org.json4s
 import org.json4s._
 import org.json4s.native.JsonMethods
 import org.json4s.native.JsonMethods._
@@ -54,10 +58,56 @@ SELECT * FROM statistics WHERE testcase_id = 'a' LIMIT 10; // will be ORDER BY d
 
 */
 
+case class Testresult(testcaseId: String,
+                      testresultId: String,
+                      datetimeRun: java.util.Date,
+                      har: json4s.JValue)
+
+case class Statistics(testcaseId: String,
+                      testresultId: String,
+                      datetimeRun: java.util.Date,
+                      totalRequestTime: Int,
+                      numberOfRequestsWithStatus200: Int,
+                      numberOfRequestsWithStatus400: Int,
+                      numberOfRequestsWithStatus500: Int)
+
 // In order to avoid "java.io.NotSerializableException: org.apache.log4j.Logger"
 object SerializableLogger extends Serializable {
   @transient lazy val log = Logger.getLogger(getClass.getName)
   log.setLevel(Level.INFO)
+}
+
+object HarAnalyzer {
+  private def calculateNumberOfRequestsWithResponseStatus(status: Int, testresult: Testresult): Int = {
+    implicit val formats = org.json4s.DefaultFormats
+    val entries = (testresult.har \ "log" \ "entries").children
+    val requestCounter = for {
+      entry <- entries
+      if ((entry \ "response" \ "status").extract[Int] >= status && (entry \ "response" \ "status").extract[Int] < status + 100)
+    } yield 1
+    if (requestCounter.isEmpty) 0 else requestCounter.reduce(_ + _)
+  }
+
+  private def calculateTotalRequestTime(testresult: Testresult): Int = {
+    implicit val formats = org.json4s.DefaultFormats
+    val entries = (testresult.har \ "log" \ "entries").children
+    val times = for { entry <- entries } yield (entry \ "time").extract[Int]
+    if (times.isEmpty) 0 else times.reduce(_ + _)
+  }
+
+  def calculateRequestStatistics(testresultsRDD: RDD[Testresult]): RDD[Statistics] = {
+    testresultsRDD.map(testresult => {
+      Statistics(
+        testcaseId = testresult.testcaseId,
+        testresultId = testresult.testresultId,
+        datetimeRun = testresult.datetimeRun,
+        totalRequestTime = calculateTotalRequestTime(testresult),
+        numberOfRequestsWithStatus200 = calculateNumberOfRequestsWithResponseStatus(200, testresult),
+        numberOfRequestsWithStatus400 = calculateNumberOfRequestsWithResponseStatus(400, testresult),
+        numberOfRequestsWithStatus500 = calculateNumberOfRequestsWithResponseStatus(500, testresult)
+      )
+    })
+  }
 }
 
 object SparkApp {
@@ -65,64 +115,42 @@ object SparkApp {
     val log = Logger.getLogger(getClass.getName)
     SerializableLogger.log.info("Starting...")
 
-    val conf = new SparkConf().setAppName("Simple Application")
+    val conf = new SparkConf().setAppName("JourneyMonitor Analyze")
     conf.set("spark.default.parallelism", "2")
     conf.set("spark.cassandra.connection.host", "127.0.0.1")
     val sc = new SparkContext("spark://127.0.0.1:7077", "JourneyMonitor Analyze", conf)
 
-    val rowRDD = sc.cassandraTable("analyze", "testresults")
+    val rowsRDD = sc.cassandraTable("analyze", "testresults")
 
     // Create RDD with a tuple of Testcase ID, Testresult ID, DateTime of Run, HAR per entry
     // Not calling .cache() because that result in OOM
-    val testrunRDD =
-      rowRDD.map(
+    val testresultsRDD =
+      rowsRDD.map(
         row => {
-          (row.get[String]("testcase_id"), row.get[String]("testresult_id"), row.get[java.util.Date]("datetime_run"), parse(row.get[String]("har"), false))
+          Testresult(
+            testcaseId = row.get[String]("testcase_id"),
+            testresultId = row.get[String]("testresult_id"),
+            datetimeRun = row.get[java.util.Date]("datetime_run"),
+            har = parse(row.get[String]("har"), false)
+          )
         }
       )
 
-    // Create RDD with a tuple of Testcase ID, Testresult ID, DateTime of Run, sum req time, #2xx, #4xx, #5xx per entry
-    val statisticRDD = testrunRDD.map(testrun => {
-      implicit val formats = DefaultFormats
-
-      val (testcaseId, testresultId, datetimeRun, har) = testrun
-
-      val startTime = System.currentTimeMillis
-      SerializableLogger.log.info(s"Starting to analyze testcase $testcaseId, testresult $testresultId from $datetimeRun")
-
-      val entries = (har \ "log" \ "entries").children
-
-      val hits200 = for { entry <- entries if ((entry \ "response" \ "status").extract[Int] >= 200 && (entry \ "response" \ "status").extract[Int] < 300) } yield 1
-      val num200 = if (hits200.isEmpty) 0 else hits200.reduce(_ + _)
-
-      val hits400 = for { entry <- entries if ((entry \ "response" \ "status").extract[Int] >= 400 && (entry \ "response" \ "status").extract[Int] < 500) } yield 1
-      val num400 = if (hits400.isEmpty) 0 else hits400.reduce(_ + _)
-
-      val hits500 = for { entry <- entries if ((entry \ "response" \ "status").extract[Int] >= 500 && (entry \ "response" \ "status").extract[Int] < 600) } yield 1
-      val num500 = if (hits500.isEmpty) 0 else hits500.reduce(_ + _)
-
-      val times = for { entry <- entries } yield (entry \ "time").extract[Int]
-      val time = if (times.isEmpty) 0 else times.reduce(_ + _)
-
-      val runTime = System.currentTimeMillis - startTime
-      SerializableLogger.log.info(s"Finished analyzing testcase $testcaseId, testresult $testresultId from $datetimeRun after ${runTime}ms")
-
-      (testcaseId, testresultId, datetimeRun, time, num200, num400, num500)
-    })
+    val statisticsRDD = HarAnalyzer.calculateRequestStatistics(testresultsRDD)
 
     val startTime = System.currentTimeMillis
     SerializableLogger.log.info(s"Starting write to Cassandra...")
-    statisticRDD.saveToCassandra(
+    statisticsRDD.saveToCassandra(
       "analyze",
       "statistics",
       SomeColumns(
-        "testcase_id",
-        "testresult_id",
-        "datetime_run",
-        "runtime_milliseconds",
-        "number_of_200",
-        "number_of_400",
-        "number_of_500"
+        "testcase_id"          as "testcaseId",
+        "testresult_id"        as "testresultId",
+        "datetime_run"         as "datetimeRun",
+        "runtime_milliseconds" as "totalRequestTime",
+        "number_of_200"        as "numberOfRequestsWithStatus200",
+        "number_of_400"        as "numberOfRequestsWithStatus400",
+        "number_of_500"        as "numberOfRequestsWithStatus500"
       )
     )
     val runTime = System.currentTimeMillis - startTime

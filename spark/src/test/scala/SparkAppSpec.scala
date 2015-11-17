@@ -4,13 +4,8 @@ import java.text.SimpleDateFormat
 
 import org.apache.spark.SparkConf
 import org.apache.spark._
-import org.apache.spark.rdd.RDD
-import org.json4s
 import org.json4s.native.JsonMethods._
 import org.scalatest.{BeforeAndAfter, FunSpec, Matchers}
-
-case class Testresult(testcaseId: String, testresultId: String, datetimeRun: java.util.Date, har: json4s.JValue)
-case class Statistics(numberOfRequestsWithStatus200: Int, numberOfRequestsWithStatus400: Int)
 
 object FixtureGenerator {
   def getTestresultsRDD(sc: SparkContext) = {
@@ -29,12 +24,14 @@ object FixtureGenerator {
             |      {
             |        "response": {
             |          "status": 200
-            |        }
+            |        },
+            |        "time": 10
             |      },
             |      {
             |        "response": {
             |          "status": 400
-            |        }
+            |        },
+            |        "time": 15
             |      }
             |    ]
             |  }
@@ -53,13 +50,15 @@ object FixtureGenerator {
             |      {
             |        "response": {
             |          "status": 400
-            |        }
+            |        },
+            |        "time": 16
             |      },
             |      {
             |        "response": {
             |          "status": 400
-            |        }
-            |      }
+            |        },
+            |        "time": 4
+            |      },
             |    ]
             |  }
             |}
@@ -67,27 +66,6 @@ object FixtureGenerator {
 
       )
     ))
-  }
-}
-
-object HarAnalyzer {
-  private def calculateNumberOfRequestsWithResponseStatus(status: Int, testresult: Testresult): Int = {
-    implicit val formats = org.json4s.DefaultFormats
-    val entries = (testresult.har \ "log" \ "entries").children
-    val requestCounter = for {
-      entry <- entries
-      if ((entry \ "response" \ "status").extract[Int] >= status && (entry \ "response" \ "status").extract[Int] < status + 100)
-    } yield 1
-    if (requestCounter.isEmpty) 0 else requestCounter.reduce(_ + _)
-  }
-
-  def calculateNumberOfRequests(testresultsRDD: RDD[Testresult]): RDD[Statistics] = {
-    testresultsRDD.map(testresult => {
-      Statistics(
-        numberOfRequestsWithStatus200 = calculateNumberOfRequestsWithResponseStatus(200, testresult),
-        numberOfRequestsWithStatus400 = calculateNumberOfRequestsWithResponseStatus(400, testresult)
-      )
-    })
   }
 }
 
@@ -113,16 +91,24 @@ class SparkExampleSpec extends FunSpec with BeforeAndAfter with Matchers {
   }
 
   describe("The HarAnalyzer") {
-    it("should calculate requests based on reponse status code") {
+    it("should extract statistics from HARs") {
       val testresultsRDD = FixtureGenerator.getTestresultsRDD(sc)
-      val statisticsRDD = HarAnalyzer.calculateNumberOfRequests(testresultsRDD)
+      val statisticsRDD = HarAnalyzer.calculateRequestStatistics(testresultsRDD)
       val statistics = statisticsRDD.collect()
 
-      statistics.apply(0).numberOfRequestsWithStatus200 should be(1)
-      statistics.apply(0).numberOfRequestsWithStatus400 should be(1)
+      statistics(0).testcaseId should be("testcaseId1")
+      statistics(0).testresultId should be("testresultId1")
+      statistics(0).datetimeRun.toString should be("Tue Nov 17 12:34:56 CET 2015")
+      statistics(0).numberOfRequestsWithStatus200 should be(1)
+      statistics(0).numberOfRequestsWithStatus400 should be(1)
+      statistics(0).totalRequestTime should be(25)
 
-      statistics.apply(1).numberOfRequestsWithStatus200 should be(0)
-      statistics.apply(1).numberOfRequestsWithStatus400 should be(2)
+      statistics(1).testcaseId should be("testcaseId1")
+      statistics(1).testresultId should be("testresultId2")
+      statistics(1).datetimeRun.toString should be("Tue Nov 17 12:34:56 CET 2015")
+      statistics(1).numberOfRequestsWithStatus200 should be(0)
+      statistics(1).numberOfRequestsWithStatus400 should be(2)
+      statistics(1).totalRequestTime should be(20)
     }
   }
 
