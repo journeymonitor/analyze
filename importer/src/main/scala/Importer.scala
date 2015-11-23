@@ -35,8 +35,10 @@ object Importer {
 
     implicit val formats = DefaultFormats
 
-    val uri = CassandraConnectionUri("cassandra://localhost:9042/analyze")
-    val session = CassandraClient.createSessionAndInitKeyspace(uri)
+    val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_IMPORTER_CASSANDRAURI", "cassandra://localhost:9042/analyze")
+
+    val cassandraConnectionUri = CassandraConnectionUri(uriString)
+    val session = CassandraClient.createSessionAndInitKeyspace(cassandraConnectionUri)
 
     val stmt = session.prepare(
       "INSERT INTO testresults " +
