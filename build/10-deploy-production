@@ -2,6 +2,8 @@
 
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:$PATH
 
+source /etc/journeymonitor/app-analyze-env.sh
+
 mkdir -p /opt/journeymonitor/analyze
 
 cd $2
