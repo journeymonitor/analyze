@@ -7,4 +7,4 @@ services:
   - cassandra
 
 before_script:
-  -  '/usr/local/cassandra/bin/cqlsh -e "CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = { \'class\' : \'SimpleStrategy\', \'replication_factor\' : 1 };"'
+  -  "/usr/local/cassandra/bin/cqlsh -e \"CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };\""
