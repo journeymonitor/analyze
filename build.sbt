@@ -1,4 +1,4 @@
-name := "JourneyMonitor - analyze"
+name := "journeymonitor-analyze"
 
 val commonSettings = Seq(
   organization := "com.journeymonitor",
@@ -38,10 +38,12 @@ lazy val sparkDependencies = Seq (
 lazy val spark = project.in(file("spark"))
   .settings(commonSettings:_*)
   .settings(libraryDependencies ++= (sparkDependencies ++ json4sDependencies ++ testDependencies))
+  .settings(assemblyJarName in assembly := "journeymonitor-analyze-spark-assembly.jar")
 
 lazy val importer = project.in(file("importer"))
   .settings(commonSettings:_*)
   .settings(libraryDependencies ++= (json4sDependencies ++ testDependencies ++ cassandraDependencies))
+  .settings(assemblyJarName in assembly := "journeymonitor-analyze-importer-assembly.jar")
 
 lazy val main = project.in(file("."))
   .aggregate(spark, importer)
