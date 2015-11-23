@@ -3,8 +3,9 @@ name := "JourneyMonitor - analyze"
 val commonSettings = Seq(
   organization := "com.journeymonitor",
   version := "0.1",
+  javacOptions := Seq("-source", "1.7", "-target", "1.7"), // The target systems run Ubuntu 14.04 which ships with JRE 1.7
   scalaVersion := "2.11.7",
-  scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8"),
+  scalacOptions := Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-encoding", "utf8"),
   // stole the following from https://github.com/datastax/spark-cassandra-connector/pull/858/files
   // in order to avoid assembly merge errors with netty
   assemblyMergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
