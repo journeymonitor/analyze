@@ -2,7 +2,7 @@
 
 ## About this repository
 
-Application that powers the analytics backend of http://journeymonitor.com.
+Applications that power the analytics backend of http://journeymonitor.com.
 
 [![Build Status](https://travis-ci.org/journeymonitor/analyze.svg?branch=master)](https://travis-ci.org/journeymonitor/analyze)
 
