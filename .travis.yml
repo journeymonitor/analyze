@@ -1,10 +1,12 @@
+env:
+  global:
+  - secure: "T3bWKw4VYm123HStYt0VVjd2S5bc3DKGHoYf+8Ay1KMvltGPhOtlShAzIzkrJjpxhXfWIxiGCJRhScUVws2o0vmpQrwMhfWCmVqHO3u6Ln+M1iXWyKc5mHYC80xx73Esg0Qg0d2Tv3LBLQgDGR2guFVza5BV+AEdL0dEx2BmmiJS62Yy9LP3BWgz5aB62gWNb+JioGBpzZAik/2F5dWfQsSt8q4ciRBgp7SkhBkISfuA9Ic6GbW6HcbQ98erDLEFInNoBSv7eP8vebjwVNIx+XtlU5uhMd/KMaIrZkLdBUmdjymtTqrAnpHoErGSN2ENfJidy+mDcuqYfx4P6e4R7eRfqQcXedCLbijJBtrW88SKnEvxHHRGPs9RhYZPV1K0edQlUn+GUC+PHSLZJUbgPcAePPZgUP6UBV0F1lt+LCr4d/MI93SuPI2B5F/RhcJIC6G1SKQu3o2bawq2Sr7KcBrpmBUlctvhB9iV6M+RH7f1KhMPLpfA5SihkrznjhEd/f7u8sGGUQ03bs3liPgQU1+xt1qCO74JROlHy/4qM3eHcm9Z0jPn+fqSPVONWTCWoWmWDvJbjO5NM6Y8HVB1ZPzqzYGvE120IkNx/o+QOkjbI7Q0+3CWv7jepLA4W5D673jNsvCaq+ZLiLnLqT7mNgTwDJ7BF4Dz/EAXsEk3yeg="
 language: scala
-
 scala:
   - 2.11.7
-
 services:
   - cassandra
-
 before_script:
-  -  "/usr/local/cassandra/bin/cqlsh -e \"CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };\""
+  -  make test-keyspace
+after_success:
+  - make travisci-after-success
