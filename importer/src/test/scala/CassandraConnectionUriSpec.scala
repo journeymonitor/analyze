@@ -6,20 +6,20 @@ class CassandraConnectionUriSpec extends FunSpec with Matchers {
 
   describe("A Cassandra connection URI object") {
     it("should parse a URI with a single host") {
-      val cut = CassandraConnectionUri("cassandra://localhost:9042/test")
-      cut.host should be ("localhost")
-      cut.hosts should be (Seq("localhost"))
-      cut.port should be (9042)
-      cut.keyspace should be ("test")
+      val ccu = CassandraConnectionUri("cassandra://localhost:9042/test")
+      ccu.host should be ("localhost")
+      ccu.hosts should be (Seq("localhost"))
+      ccu.port should be (9042)
+      ccu.keyspace should be ("test")
     }
     it("should parse a URI with additional hosts") {
-      val cut = CassandraConnectionUri(
+      val ccu = CassandraConnectionUri(
         "cassandra://localhost:9042/test" +
           "?host=otherhost.example.net" +
           "&host=yet.anotherhost.example.com")
-      cut.hosts should contain allOf ("localhost", "otherhost.example.net", "yet.anotherhost.example.com")
-      cut.port should be (9042)
-      cut.keyspace should be ("test")
+      ccu.hosts should contain allOf ("localhost", "otherhost.example.net", "yet.anotherhost.example.com")
+      ccu.port should be (9042)
+      ccu.keyspace should be ("test")
     }
   }
 
