@@ -11,6 +11,6 @@ scala:
 services:
   - cassandra
 before_script:
-  -  make test-keyspace
+  - make travisci-test-keyspace
 after_success:
   - make travisci-after-success

@@ -1,4 +1,4 @@
-test-keyspace:
+travisci-test-keyspace:
 	/bin/sleep 10 && /usr/local/cassandra/bin/cqlsh -e "CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };"
 
 travisci-after-success:
