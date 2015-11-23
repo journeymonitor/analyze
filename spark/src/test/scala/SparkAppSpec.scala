@@ -98,14 +98,16 @@ class SparkExampleSpec extends FunSpec with BeforeAndAfter with Matchers {
 
       statistics(0).testcaseId should be("testcaseId1")
       statistics(0).testresultId should be("testresultId1")
-      statistics(0).datetimeRun.toString should be("Tue Nov 17 12:34:56 CET 2015")
+      statistics(0).datetimeRun.toString.substring(0, 20) should be("Tue Nov 17 12:34:56 ") // @TODO: Stupid hack because we do not yet store the timezone
+      statistics(0).datetimeRun.toString.substring(24) should be("2015")
       statistics(0).numberOfRequestsWithStatus200 should be(1)
       statistics(0).numberOfRequestsWithStatus400 should be(1)
       statistics(0).totalRequestTime should be(25)
 
       statistics(1).testcaseId should be("testcaseId1")
       statistics(1).testresultId should be("testresultId2")
-      statistics(1).datetimeRun.toString should be("Tue Nov 17 12:34:56 CET 2015")
+      statistics(1).datetimeRun.toString.substring(0, 20) should be("Tue Nov 17 12:34:56 ")
+      statistics(1).datetimeRun.toString.substring(24) should be("2015")
       statistics(1).numberOfRequestsWithStatus200 should be(0)
       statistics(1).numberOfRequestsWithStatus400 should be(2)
       statistics(1).totalRequestTime should be(20)
