@@ -8,7 +8,7 @@ mkdir -p /opt/journeymonitor/analyze
 
 cd $2
 
-/usr/bin/cqlsh ${JOURNEYMONITOR_ANALYZE_SPARK_CASSANDRA_CQLSH_HOST} -e "CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };" || exit 1
+/usr/bin/cqlsh ${JOURNEYMONITOR_ANALYZE_CASSANDRA_CQLSH_HOST} -e "CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };" || exit 1
 
 # This also runs all tests
 /usr/bin/sbt assembly || exit 1
