@@ -31,6 +31,15 @@ import scala.io.BufferedSource
  */
 
 object Importer {
+  def printMem() {
+    val mb = 1024*1024
+    val runtime = Runtime.getRuntime
+    println("** Used Memory:  " + (runtime.totalMemory - runtime.freeMemory) / mb)
+    println("** Free Memory:  " + runtime.freeMemory / mb)
+    println("** Total Memory: " + runtime.totalMemory / mb)
+    println("** Max Memory:   " + runtime.maxMemory / mb)
+  }
+
   def main(args: Array[String]) {
 
     implicit val formats = DefaultFormats
@@ -47,8 +56,9 @@ object Importer {
 
     val filename = if (args.length == 0) "" else (args(0))
 
+    val source = scala.io.Source.fromFile(filename)
     try {
-      scala.io.Source.fromFile(filename).getLines().foreach(line => {
+      source.getLines().foreach(line => {
         if (!line.startsWith("[") && !line.startsWith("]")) {
           val normalizedLine = if (line.endsWith(",")) { // last line will not end with a comma
             line.take(line.length - 1)
@@ -76,6 +86,7 @@ object Importer {
             }
           }
         }
+        printMem()
       })
     } catch {
       case e: Exception => {
@@ -84,6 +95,8 @@ object Importer {
         session.getCluster.close()
         System.exit(1)
       }
+    } finally {
+      source.close()
     }
 
     session.close()

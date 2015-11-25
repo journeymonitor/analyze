@@ -33,16 +33,17 @@ i x x x   i x x x
 m x x x   m x x x
 e         e
 
-CREATE KEYSPACE IF NOT EXISTS analyze WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': 1 };
+
+Table structures:
 
 CREATE TABLE analyze.testresults (
-    testcase_id text,
-    testresult_id text,
-    datetime_run timestamp,
-    har text,
-    is_analyzed boolean,
-    PRIMARY KEY ((testcase_id), datetime_run)
-) WITH CLUSTERING ORDER BY (datetime_run DESC);
+      testcase_id text,
+      datetime_run timestamp,
+      har text,
+      is_analyzed boolean,
+      testresult_id text,
+      PRIMARY KEY (testresult_id)
+  )
 
 CREATE TABLE analyze.statistics (
     testcase_id text,
@@ -54,6 +55,9 @@ CREATE TABLE analyze.statistics (
     number_of_500 int,
     PRIMARY KEY ((testcase_id), datetime_run)
 ) WITH CLUSTERING ORDER BY (datetime_run DESC);
+
+The idea here is to have a very even spread of testresults, but to partition the statistics by testcase_id because the
+use case around querying statistics is that we will want to get a list of N last statistics for a testcase:
 
 SELECT * FROM statistics WHERE testcase_id = 'a' LIMIT 10; // will be ORDER BY datetime_run DESC automatically
 
@@ -109,11 +113,10 @@ object HarAnalyzer {
 
 object SparkApp {
   def main(args: Array[String]) {
-
     val conf = new SparkConf().setAppName("JourneyMonitor Analyze")
-    conf.set("spark.default.parallelism", "2")
-    conf.set("spark.cassandra.connection.host", "127.0.0.1")
-    val sc = new SparkContext("spark://127.0.0.1:7077", "JourneyMonitor Analyze", conf)
+    val cassandraHost = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_SPARK_CASSANDRAHOST", "127.0.0.1")
+    conf.set("spark.cassandra.connection.host", cassandraHost)
+    val sc = new SparkContext(conf)
 
     val rowsRDD = sc.cassandraTable("analyze", "testresults")
 
