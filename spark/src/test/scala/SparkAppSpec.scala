@@ -4,7 +4,8 @@ import java.text.SimpleDateFormat
 
 import org.apache.spark.SparkConf
 import org.apache.spark._
-import org.json4s.native.JsonMethods._
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
 import org.scalatest.{BeforeAndAfter, FunSpec, Matchers}
 
 object FixtureGenerator {
@@ -58,7 +59,7 @@ object FixtureGenerator {
             |          "status": 400
             |        },
             |        "time": 4
-            |      },
+            |      }
             |    ]
             |  }
             |}

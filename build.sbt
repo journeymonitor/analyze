@@ -3,7 +3,7 @@ name := "journeymonitor-analyze"
 val commonSettings = Seq(
   organization := "com.journeymonitor",
   version := "0.1",
-  javacOptions := Seq("-source", "1.7", "-target", "1.7"), // The target systems run Ubuntu 14.04 which ships with JRE 1.7
+  javacOptions := Seq("-source", "1.7", "-target", "1.7"), // The target systems run Ubuntu 14.04 which ships with JDK 1.7
   scalaVersion := "2.11.7",
   scalacOptions := Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-encoding", "utf8"),
   // stole the following from https://github.com/datastax/spark-cassandra-connector/pull/858/files
@@ -26,7 +26,7 @@ lazy val cassandraDependencies = Seq (
 )
 
 lazy val json4sDependencies = Seq (
-  "org.json4s" %% "json4s-native" % "3.3.0"
+  "org.json4s" %% "json4s-jackson" % "3.2.10"
 )
 
 lazy val sparkDependencies = Seq (

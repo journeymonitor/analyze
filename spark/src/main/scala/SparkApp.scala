@@ -4,16 +4,8 @@ import org.apache.spark._
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import com.datastax.spark.connector._
-import org.json4s
 import org.json4s._
-import org.json4s.native.JsonMethods
-import org.json4s.native.JsonMethods._
-import org.json4s.JsonAST._
-import org.json4s.DefaultFormats
-import org.json4s.native.JsonParser
-import org.apache.log4j.LogManager
-import org.apache.log4j.Level
-import org.apache.log4j.PropertyConfigurator
+import org.json4s.jackson.JsonMethods._
 
 /*
 
@@ -66,7 +58,7 @@ SELECT * FROM statistics WHERE testcase_id = 'a' LIMIT 10; // will be ORDER BY d
 case class Testresult(testcaseId: String,
                       testresultId: String,
                       datetimeRun: java.util.Date,
-                      har: json4s.JValue)
+                      har: JValue)
 
 case class Statistics(testcaseId: String,
                       testresultId: String,
@@ -77,35 +69,38 @@ case class Statistics(testcaseId: String,
                       numberOfRequestsWithStatus500: Int)
 
 object HarAnalyzer {
-  private def calculateNumberOfRequestsWithResponseStatus(status: Int, testresult: Testresult): Int = {
+  private def calculateNumberOfRequestsWithResponseStatus(status: Int, entries: List[JsonAST.JValue]): Int = {
     implicit val formats = org.json4s.DefaultFormats
-    val entries = (testresult.har \ "log" \ "entries").children
     val requestCounter = for {
       entry <- entries
       if ((entry \ "response" \ "status").extract[Int] >= status && (entry \ "response" \ "status").extract[Int] < status + 100)
     } yield 1
     if (requestCounter.isEmpty) 0 else requestCounter.reduce(_ + _)
+    // This is a "normal" Scala reduce, not an RDD reduce.
+    // Because this method is called from within testresultsRDD.map, the reduce does not happen in the driver,
+    // but in the executors
   }
 
-  private def calculateTotalRequestTime(testresult: Testresult): Int = {
+  private def calculateTotalRequestTime(entries: List[JsonAST.JValue]): Int = {
     implicit val formats = org.json4s.DefaultFormats
-    val entries = (testresult.har \ "log" \ "entries").children
     val times = for { entry <- entries } yield (entry \ "time").extract[Int]
     if (times.isEmpty) 0 else times.reduce(_ + _)
+    // This is a "normal" Scala reduce, not an RDD reduce.
+    // Because this method is called from within testresultsRDD.map, the reduce does not happen in the driver,
+    // but in the executors
   }
 
   def calculateRequestStatistics(testresultsRDD: RDD[Testresult]): RDD[Statistics] = {
     testresultsRDD.map(testresult => {
-      val log = LogManager.getRootLogger()
-      log.info(s"Calculating statistics for testresult ${testresult.testresultId}")
+      val entries = (testresult.har \ "log" \ "entries").children
       Statistics(
         testcaseId = testresult.testcaseId,
         testresultId = testresult.testresultId,
         datetimeRun = testresult.datetimeRun,
-        totalRequestTime = calculateTotalRequestTime(testresult),
-        numberOfRequestsWithStatus200 = calculateNumberOfRequestsWithResponseStatus(200, testresult),
-        numberOfRequestsWithStatus400 = calculateNumberOfRequestsWithResponseStatus(400, testresult),
-        numberOfRequestsWithStatus500 = calculateNumberOfRequestsWithResponseStatus(500, testresult)
+        totalRequestTime = calculateTotalRequestTime(entries),
+        numberOfRequestsWithStatus200 = calculateNumberOfRequestsWithResponseStatus(200, entries),
+        numberOfRequestsWithStatus400 = calculateNumberOfRequestsWithResponseStatus(400, entries),
+        numberOfRequestsWithStatus500 = calculateNumberOfRequestsWithResponseStatus(500, entries)
       )
     })
   }
@@ -122,6 +117,8 @@ object SparkApp {
 
     // Create RDD with a tuple of Testcase ID, Testresult ID, DateTime of Run, HAR per entry
     // Not calling .cache() because that result in OOM
+    // Note: this flatMap is where executors spend the most time (currently around 2s for ~330 rows (~42 MB))
+    // The suspect here is the parse operation because our JSON is quite large and complex
     val testresultsRDD =
       rowsRDD.flatMap(
         row => {
