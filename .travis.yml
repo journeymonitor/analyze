@@ -6,6 +6,8 @@ branches:
   - master
   - develop
 language: scala
+jdk:
+  - openjdk8
 scala:
   - 2.11.7
 services:

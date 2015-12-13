@@ -3,9 +3,9 @@ name := "journeymonitor-analyze"
 val commonSettings = Seq(
   organization := "com.journeymonitor",
   version := "0.1",
-  javacOptions := Seq("-source", "1.7", "-target", "1.7"), // The target systems run Ubuntu 14.04 which ships with JDK 1.7
+  javacOptions := Seq("-source", "1.8", "-target", "1.8"),
   scalaVersion := "2.11.7",
-  scalacOptions := Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-encoding", "utf8"),
+  scalacOptions := Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-encoding", "utf8"),
   // stole the following from https://github.com/datastax/spark-cassandra-connector/pull/858/files
   // in order to avoid assembly merge errors with netty
   assemblyMergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
@@ -37,6 +37,10 @@ lazy val sparkDependencies = Seq (
 
 lazy val spark = project.in(file("spark"))
   .settings(commonSettings:_*)
+  .settings(
+    javacOptions := Seq("-source", "1.7", "-target", "1.7"),
+    scalacOptions := Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-encoding", "utf8")
+  )
   .settings(libraryDependencies ++= (sparkDependencies ++ json4sDependencies ++ testDependencies))
   .settings(assemblyJarName in assembly := "journeymonitor-analyze-spark-assembly.jar")
 

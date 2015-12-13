@@ -10,8 +10,9 @@ cd $2
 
 /usr/bin/cqlsh ${JOURNEYMONITOR_ANALYZE_CASSANDRA_CQLSH_HOST} -e "CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };" || exit 1
 
-# This also runs all tests
-/usr/bin/sbt assembly || exit 1
+/usr/bin/sbt "project importer" "assembly" || exit 1 # This also runs all tests
+/usr/bin/sbt "project spark" "assembly" || exit 1 # This also runs all tests
+/usr/bin/sbt "project api" "test" "dist" || exit 1
 
 cp importer/target/scala-2.11/journeymonitor-analyze-importer-assembly.jar /opt/journeymonitor/analyze/
 cp spark/target/scala-2.11/journeymonitor-analyze-spark-assembly.jar /opt/journeymonitor/analyze/
