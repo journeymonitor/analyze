@@ -51,7 +51,6 @@ lazy val importer = project.in(file("importer"))
 
 lazy val api = project
   .settings(commonSettings:_*)
-  .settings(assemblyJarName in assembly := "journeymonitor-analyze-api-assembly.jar")
 
 lazy val main = project.in(file("."))
   .aggregate(spark, importer, api)
