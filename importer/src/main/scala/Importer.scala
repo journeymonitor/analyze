@@ -46,21 +46,12 @@ object Importer {
     System.exit(1)
   }
 
-  def main(args: Array[String]) {
-
+  def run (filename: String, session: com.datastax.driver.core.Session) {
     implicit val formats = DefaultFormats
-
-    val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_IMPORTER_CASSANDRAURI", "cassandra://localhost:9042/analyze")
-
-    val cassandraConnectionUri = CassandraConnectionUri(uriString)
-    val session = CassandraClient.createSessionAndInitKeyspace(cassandraConnectionUri)
-
     val stmt = session.prepare(
       "INSERT INTO testresults " +
-      "(testcase_id, datetime_run, testresult_id, har, is_analyzed) " +
-      "VALUES (?, ?, ?, ?, ?);")
-
-    val filename = if (args.length == 0) "" else (args(0))
+        "(testcase_id, datetime_run, testresult_id, har, is_analyzed) " +
+        "VALUES (?, ?, ?, ?, ?);")
 
     try {
       val source = scala.io.Source.fromFile(filename)
@@ -111,4 +102,25 @@ object Importer {
     session.close()
     session.getCluster.close()
   }
+
+  def main(args: Array[String]) {
+    val filename = if (args.length == 0) "" else (args(0))
+
+    val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_IMPORTER_CASSANDRAURI", "cassandra://localhost:9042/analyze")
+    val cassandraConnectionUri = CassandraConnectionUri(uriString)
+
+    val sessionOption: Option[com.datastax.driver.core.Session] = try {
+      Some(CassandraClient.createSessionAndInitKeyspace(cassandraConnectionUri))
+    } catch {
+      case e: Exception => {
+        println(e)
+        None
+      }
+    }
+    sessionOption match {
+      case Some(session) => run(filename, session)
+      case None => System.exit(1)
+    }
+  }
+
 }
