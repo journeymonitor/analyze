@@ -39,6 +39,13 @@ object Importer {
     println("** Max Memory:   " + runtime.maxMemory / mb)
   }
 
+  def cleanupAndAbort(e: Exception, session: com.datastax.driver.core.Session) {
+    println(e)
+    session.close()
+    session.getCluster().close()
+    System.exit(1)
+  }
+
   def main(args: Array[String]) {
 
     implicit val formats = DefaultFormats
@@ -55,49 +62,52 @@ object Importer {
 
     val filename = if (args.length == 0) "" else (args(0))
 
-    val source = scala.io.Source.fromFile(filename)
     try {
-      source.getLines().foreach(line => {
-        if (!line.startsWith("[") && !line.startsWith("]")) {
-          val normalizedLine = if (line.endsWith(",")) { // last line will not end with a comma
-            line.take(line.length - 1)
-          } else {
-            line
-          }
-          val entryJson = parse(normalizedLine)
-          val format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-          val datetimeRun = format.parse((entryJson \ "datetimeRun").extract[String])
-          val boundStmt = stmt.bind(
-            (entryJson \ "testcaseId").extract[String],
-            datetimeRun,
-            (entryJson \ "id").extract[String],
-            (entryJson \ "har").extract[String]
-            // simply passing `false` here results in "the result type of an implicit conversion must be more specific than AnyRef"
-          )
-          boundStmt.setBool(4, false)
-          try {
-            session.execute(boundStmt)
-            println("Added Testresult " + (entryJson \ "id").extract[String] + " from " + datetimeRun + " for Testcase " + (entryJson \ "testcaseId").extract[String])
-          } catch {
-            case e: Exception => {
-              println("Could not add testresult " + (entryJson \ "id").extract[String] + " from " + datetimeRun + " for Testcase " + (entryJson \ "testcaseId").extract[String])
-              println(e)
+      val source = scala.io.Source.fromFile(filename)
+      try {
+        source.getLines().foreach(line => {
+          if (!line.startsWith("[") && !line.startsWith("]")) {
+            val normalizedLine = if (line.endsWith(",")) {
+              // last line will not end with a comma
+              line.take(line.length - 1)
+            } else {
+              line
+            }
+            val entryJson = parse(normalizedLine)
+            val format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            val datetimeRun = format.parse((entryJson \ "datetimeRun").extract[String])
+            val boundStmt = stmt.bind(
+              (entryJson \ "testcaseId").extract[String],
+              datetimeRun,
+              (entryJson \ "id").extract[String],
+              (entryJson \ "har").extract[String]
+              // simply passing `false` here results in "the result type of an implicit conversion must be more specific than AnyRef"
+            )
+            boundStmt.setBool(4, false)
+            try {
+              session.execute(boundStmt)
+              println("Added Testresult " + (entryJson \ "id").extract[String] + " from " + datetimeRun + " for Testcase " + (entryJson \ "testcaseId").extract[String])
+            } catch {
+              case e: Exception => {
+                println("Could not add testresult " + (entryJson \ "id").extract[String] + " from " + datetimeRun + " for Testcase " + (entryJson \ "testcaseId").extract[String])
+                println(e)
+              }
             }
           }
+          printMem()
+        })
+      } catch { // We could access the file, but encountered a problem while doing so
+        case e: Exception => {
+          cleanupAndAbort(e, session)
         }
-        printMem()
-      })
-    } catch {
-      case e: Exception => {
-        println(e)
-        session.close()
-        session.getCluster.close()
-        System.exit(1)
+      } finally {
+        source.close()
       }
-    } finally {
-      source.close()
+    } catch { // The provided file cannot be accesses (not found, insufficient permission, etc.)
+      case e: Exception => {
+        cleanupAndAbort(e, session)
+      }
     }
-
     session.close()
     session.getCluster.close()
   }
