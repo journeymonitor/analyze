@@ -1,4 +1,4 @@
-package com.journeymonitor.analyze.importer
+package com.journeymonitor.analyze.common
 
 import org.scalatest.{Matchers, FunSpec}
 

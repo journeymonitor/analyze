@@ -1,4 +1,4 @@
-package com.journeymonitor.analyze.importer;
+package com.journeymonitor.analyze.common;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package com.journeymonitor.analyze.importer
+package com.journeymonitor.analyze.common
 
 import com.chrisomeara.pillar._
 import com.datastax.driver.core.Session
