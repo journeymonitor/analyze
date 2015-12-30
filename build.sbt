@@ -54,6 +54,7 @@ lazy val api = project
 
 lazy val common = project
   .settings(commonSettings:_*)
+  .settings(libraryDependencies ++= (testDependencies ++ cassandraDependencies))
 
 lazy val main = project.in(file("."))
   .aggregate(spark, importer, api)
