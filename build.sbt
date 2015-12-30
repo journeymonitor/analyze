@@ -48,6 +48,7 @@ lazy val importer = project.in(file("importer"))
   .settings(commonSettings:_*)
   .settings(libraryDependencies ++= (json4sDependencies ++ testDependencies ++ cassandraDependencies))
   .settings(assemblyJarName in assembly := "journeymonitor-analyze-importer-assembly.jar")
+  .dependsOn(common)
 
 lazy val api = project
   .settings(commonSettings:_*)
@@ -57,4 +58,4 @@ lazy val common = project
   .settings(libraryDependencies ++= (testDependencies ++ cassandraDependencies))
 
 lazy val main = project.in(file("."))
-  .aggregate(spark, importer, api)
+  .aggregate(common, spark, importer, api)

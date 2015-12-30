@@ -21,6 +21,9 @@ Please see [ABOUT.md](https://github.com/journeymonitor/infra/blob/master/ABOUT.
 - `cqlsh -e "CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };"`
 - `cqlsh -e "CREATE KEYSPACE IF NOT EXISTS analyze WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };"`
 
+Pillar-based Cassandra migration scripts live in `common/src/main/resources/migrations`. They are automatically applied
+whenever an application starts that uses the `CassandraClient` object.
+
 
 #### Feed sample testresults into local Cassandra
 
