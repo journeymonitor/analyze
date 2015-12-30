@@ -6,6 +6,7 @@ val commonSettings = Seq(
   javacOptions := Seq("-source", "1.8", "-target", "1.8"),
   scalaVersion := "2.11.7",
   scalacOptions := Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-encoding", "utf8"),
+  parallelExecution in Test := false,
   // stole the following from https://github.com/datastax/spark-cassandra-connector/pull/858/files
   // in order to avoid assembly merge errors with netty
   assemblyMergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
