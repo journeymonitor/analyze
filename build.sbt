@@ -52,5 +52,8 @@ lazy val importer = project.in(file("importer"))
 lazy val api = project
   .settings(commonSettings:_*)
 
+lazy val common = project
+  .settings(commonSettings:_*)
+
 lazy val main = project.in(file("."))
   .aggregate(spark, importer, api)
