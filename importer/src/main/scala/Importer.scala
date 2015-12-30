@@ -40,66 +40,88 @@ object Importer {
     println("** Max Memory:   " + runtime.maxMemory / mb)
   }
 
-  def main(args: Array[String]) {
+  def cleanupAndAbort(e: Exception, session: com.datastax.driver.core.Session) {
+    println(e)
+    session.close()
+    session.getCluster().close()
+    System.exit(1)
+  }
 
+  def run (filename: String, session: com.datastax.driver.core.Session) {
     implicit val formats = DefaultFormats
-
-    val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_IMPORTER_CASSANDRAURI", "cassandra://localhost:9042/analyze")
-
-    val cassandraConnectionUri = CassandraConnectionUri(uriString)
-    val session = CassandraClient.createSessionAndInitKeyspace(cassandraConnectionUri)
-
     val stmt = session.prepare(
       "INSERT INTO testresults " +
-      "(testcase_id, datetime_run, testresult_id, har, is_analyzed) " +
-      "VALUES (?, ?, ?, ?, ?);")
+        "(testcase_id, datetime_run, testresult_id, har, is_analyzed) " +
+        "VALUES (?, ?, ?, ?, ?);")
 
-    val filename = if (args.length == 0) "" else (args(0))
-
-    val source = scala.io.Source.fromFile(filename)
     try {
-      source.getLines().foreach(line => {
-        if (!line.startsWith("[") && !line.startsWith("]")) {
-          val normalizedLine = if (line.endsWith(",")) { // last line will not end with a comma
-            line.take(line.length - 1)
-          } else {
-            line
-          }
-          val entryJson = parse(normalizedLine)
-          val format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-          val datetimeRun = format.parse((entryJson \ "datetimeRun").extract[String])
-          val boundStmt = stmt.bind(
-            (entryJson \ "testcaseId").extract[String],
-            datetimeRun,
-            (entryJson \ "id").extract[String],
-            (entryJson \ "har").extract[String]
-            // simply passing `false` here results in "the result type of an implicit conversion must be more specific than AnyRef"
-          )
-          boundStmt.setBool(4, false)
-          try {
-            session.execute(boundStmt)
-            println("Added Testresult " + (entryJson \ "id").extract[String] + " from " + datetimeRun + " for Testcase " + (entryJson \ "testcaseId").extract[String])
-          } catch {
-            case e: Exception => {
-              println("Could not add testresult " + (entryJson \ "id").extract[String] + " from " + datetimeRun + " for Testcase " + (entryJson \ "testcaseId").extract[String])
-              println(e)
+      val source = scala.io.Source.fromFile(filename)
+      try {
+        source.getLines().foreach(line => {
+          if (!line.startsWith("[") && !line.startsWith("]")) {
+            val normalizedLine = if (line.endsWith(",")) {
+              // last line will not end with a comma
+              line.take(line.length - 1)
+            } else {
+              line
+            }
+            val entryJson = parse(normalizedLine)
+            val format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            val datetimeRun = format.parse((entryJson \ "datetimeRun").extract[String])
+            val boundStmt = stmt.bind(
+              (entryJson \ "testcaseId").extract[String],
+              datetimeRun,
+              (entryJson \ "id").extract[String],
+              (entryJson \ "har").extract[String]
+              // simply passing `false` here results in "the result type of an implicit conversion must be more specific than AnyRef"
+            )
+            boundStmt.setBool(4, false)
+            try {
+              session.execute(boundStmt)
+              println("Added Testresult " + (entryJson \ "id").extract[String] + " from " + datetimeRun + " for Testcase " + (entryJson \ "testcaseId").extract[String])
+            } catch {
+              case e: Exception => {
+                println("Could not add testresult " + (entryJson \ "id").extract[String] + " from " + datetimeRun + " for Testcase " + (entryJson \ "testcaseId").extract[String])
+                println(e)
+              }
             }
           }
+          printMem()
+        })
+      } catch { // We could access the file, but encountered a problem while doing so
+        case e: Exception => {
+          cleanupAndAbort(e, session)
         }
-        printMem()
-      })
-    } catch {
-      case e: Exception => {
-        println(e)
-        session.close()
-        session.getCluster.close()
-        System.exit(1)
+      } finally {
+        source.close()
       }
-    } finally {
-      source.close()
+    } catch { // The provided file cannot be accesses (not found, insufficient permission, etc.)
+      case e: Exception => {
+        cleanupAndAbort(e, session)
+      }
     }
-
     session.close()
     session.getCluster.close()
   }
+
+  def main(args: Array[String]) {
+    val filename = if (args.length == 0) "" else (args(0))
+
+    val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_IMPORTER_CASSANDRAURI", "cassandra://localhost:9042/analyze")
+    val cassandraConnectionUri = CassandraConnectionUri(uriString)
+
+    val sessionOption: Option[com.datastax.driver.core.Session] = try {
+      Some(CassandraClient.createSessionAndInitKeyspace(cassandraConnectionUri))
+    } catch {
+      case e: Exception => {
+        println(e)
+        None
+      }
+    }
+    sessionOption match {
+      case Some(session) => run(filename, session)
+      case None => System.exit(1)
+    }
+  }
+
 }
