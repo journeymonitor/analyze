@@ -19,6 +19,15 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       contentType(home) mustBe Some("text/html")
       contentAsString(home) must include ("Your new application is ready.")
     }
+
+    "return a JSON object with statistics for a given testresult id" in {
+      val Some(response) = route(FakeRequest(GET, "/testresults/abcd/statistics/"))
+
+      status(response) mustBe OK
+      contentType(response) mustBe Some("application/json")
+      charset(response) mustBe Some("utf-8")
+      contentAsString(response) mustBe """{"foo":"a","bar":"b"}"""
+    }
   }
 
 }
