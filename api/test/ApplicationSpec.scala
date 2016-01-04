@@ -1,20 +1,40 @@
 import java.io.File
 
+import components.CassandraClient
+import controllers.Application
 import play.api
 import play.api.{ApplicationLoader, Environment, Mode}
+import play.api.ApplicationLoader.Context
 import play.api.test._
 import play.api.test.Helpers._
 import org.scalatestplus.play._
 
+class MockCassandraClient extends CassandraClient("cassandra://localhost:9042/mock") {
+  override def close() { // This doesn't get called on shutdown because the mock is not created through the component
+    println("Closed the mocked Cassandra client")
+  }
+}
+
+class FakeApplicationComponents(context: Context) extends AppComponents(context) {
+  override lazy val applicationController = new Application(new MockCassandraClient())
+}
+
+class FakeAppLoader extends ApplicationLoader {
+  override def load(context: Context): api.Application =
+    new FakeApplicationComponents(context).application
+}
+
 class ApplicationSpec extends PlaySpec with OneAppPerSuite {
 
-  override implicit lazy val app: api.Application =
-    new AppLoader().load(
+  override implicit lazy val app: api.Application = {
+    val appLoader = new FakeAppLoader
+    appLoader.load(
       ApplicationLoader.createContext(
         new Environment(
           new File("."), ApplicationLoader.getClass.getClassLoader, Mode.Test)
       )
     )
+  }
 
   "Application" should {
 
@@ -29,7 +49,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Your new application is ready. CassandraClient in Test Mode")
+      contentAsString(home) must include ("Your new application is ready. cassandra://localhost:9042/mock")
     }
 
     "return a JSON object with statistics for a given testresult id" in {

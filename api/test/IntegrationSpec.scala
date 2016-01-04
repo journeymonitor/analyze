@@ -20,7 +20,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
 
       go to "http://localhost:" + port
 
-      pageSource must include ("Your new application is ready. CassandraClient in Test Mode")
+      pageSource must include ("Your new application is ready. cassandra://localhost:9042/test")
     }
   }
 }
