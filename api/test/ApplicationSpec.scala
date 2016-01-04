@@ -9,14 +9,20 @@ import play.api.test._
 import play.api.test.Helpers._
 import org.scalatestplus.play._
 
+import scala.concurrent.Future
+
 class MockCassandraClient extends CassandraClient("cassandra://localhost:9042/mock") {
-  override def close() { // This doesn't get called on shutdown because the mock is not created through the component
+  override def close() {
     println("Closed the mocked Cassandra client")
   }
 }
 
 class FakeApplicationComponents(context: Context) extends AppComponents(context) {
-  override lazy val applicationController = new Application(new MockCassandraClient())
+  override lazy val cassandraClient: CassandraClient = {
+    val client = new MockCassandraClient
+    applicationLifecycle.addStopHook(() => Future.successful(client.close()))
+    client
+  }
 }
 
 class FakeAppLoader extends ApplicationLoader {
