@@ -13,7 +13,7 @@ class CassandraClient(url: String) {
   }
 }
 
-trait CassandraClientComponent {
+trait CassandraComponents {
   // These will be filled by Play's built-in components; should be `def` to avoid initialization problems
   def environment: Environment
   def configuration: Configuration
