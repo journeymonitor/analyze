@@ -1,6 +1,6 @@
+import components.CassandraClientComponent
 import controllers.api.Statistics
 import play.api.ApplicationLoader.Context
-import play.api.libs.ws.ning.NingWSComponents
 import play.api.routing.Router
 import play.api.{Application, ApplicationLoader, BuiltInComponentsFromContext}
 import router.Routes
@@ -10,9 +10,9 @@ class AppLoader extends ApplicationLoader {
     new AppComponents(context).application
 }
 
-class AppComponents(context: Context) extends BuiltInComponentsFromContext(context) with NingWSComponents {
+class AppComponents(context: Context) extends BuiltInComponentsFromContext(context) with CassandraClientComponent {
 
-  lazy val applicationController = new controllers.Application(wsClient)
+  lazy val applicationController = new controllers.Application(cassandraClient)
   lazy val statisticsController = new Statistics()
   lazy val assets = new controllers.Assets(httpErrorHandler)
 

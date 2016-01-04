@@ -29,7 +29,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Your new application is ready.")
+      contentAsString(home) must include ("Your new application is ready. CassandraClient in Test Mode")
     }
 
     "return a JSON object with statistics for a given testresult id" in {
