@@ -1,6 +1,18 @@
+import java.io.File
+
 import org.scalatestplus.play._
+import play.api
+import play.api.{Mode, Environment, ApplicationLoader}
 
 class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPerSuite with HtmlUnitFactory {
+
+  override implicit lazy val app: api.Application =
+    new AppLoader().load(
+      ApplicationLoader.createContext(
+        new Environment(
+          new File("."), ApplicationLoader.getClass.getClassLoader, Mode.Test)
+      )
+    )
 
   "Application" should {
 

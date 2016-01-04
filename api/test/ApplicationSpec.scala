@@ -1,8 +1,20 @@
+import java.io.File
+
+import play.api
+import play.api.{ApplicationLoader, Environment, Mode}
 import play.api.test._
 import play.api.test.Helpers._
 import org.scalatestplus.play._
 
 class ApplicationSpec extends PlaySpec with OneAppPerSuite {
+
+  override implicit lazy val app: api.Application =
+    new AppLoader().load(
+      ApplicationLoader.createContext(
+        new Environment(
+          new File("."), ApplicationLoader.getClass.getClassLoader, Mode.Test)
+      )
+    )
 
   "Application" should {
 
