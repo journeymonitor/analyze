@@ -15,10 +15,10 @@ class FakeCassandraClient(url: String) {
   }
 }
 
-trait CassandraRepository[Model, Id] extends Repository[Model, Id] {
+trait CassandraRepository[M, I] extends Repository[M, I] {
   var cassandraClient: FakeCassandraClient = _
 
-  override def getOneRowById(id: Id): Array[String] = {
+  override def getOneRowById(id: I): Array[String] = {
     // query using cassandraClient and return
     Array("testresult-" + id, "123")
   }
@@ -28,11 +28,11 @@ trait CassandraRepository[Model, Id] extends Repository[Model, Id] {
   }
 }
 
-abstract trait Repository[Model, Id] {
-  def getOneRowById(id: Id): Array[String]
-  def rowToModel(row: Array[String]): Model
+abstract trait Repository[M, I] {
+  def getOneRowById(id: I): Array[String]
+  def rowToModel(row: Array[String]): M
 
-  def getOneById(id: Id): Model = {
+  def getOneById(id: I): M = {
     val row = getOneRowById(id)
     rowToModel(row)
   }
