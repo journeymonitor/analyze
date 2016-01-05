@@ -11,14 +11,14 @@ import org.scalatestplus.play._
 
 import scala.concurrent.Future
 
-class MockStatisticsRepository extends AbstractRepository[Statistics] {
+class MockStatisticsRepository extends AbstractRepository[Statistics, String] {
   override def getOneById(id: String): Statistics = {
     Statistics("mockedTestresultId", 1)
   }
 }
 
 class FakeApplicationComponents(context: Context) extends AppComponents(context) {
-  override lazy val statisticsRepository: AbstractRepository[Statistics] = {
+  override lazy val statisticsRepository: AbstractRepository[Statistics, String] = {
     new MockStatisticsRepository
   }
 }

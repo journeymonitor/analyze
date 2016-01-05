@@ -27,11 +27,11 @@ trait CassandraClient {
   }
 }
 
-abstract class AbstractRepository[T] {
-  def getOneById(id: String): T
+abstract class AbstractRepository[T, A] {
+  def getOneById(id: A): T
 }
 
-class StatisticsRepository extends AbstractRepository[Statistics] with CassandraClient {
+class StatisticsRepository extends AbstractRepository[Statistics, String] with CassandraClient {
   override def getOneById(id: String): Statistics = {
     val row = cassandraClient.getOneRowById(id)
     Statistics(row(0), row(1).toInt)
@@ -56,7 +56,7 @@ trait CassandraRepositoryComponents {
     client
   }
 
-  lazy val statisticsRepository: AbstractRepository[Statistics] = {
+  lazy val statisticsRepository: AbstractRepository[Statistics, String] = {
     val repo = new StatisticsRepository
     repo.setCassandraClient(cassandraClient)
     repo
