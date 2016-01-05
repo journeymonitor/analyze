@@ -10,8 +10,6 @@ case class Statistics(testresultId: String, numberOf200: Int) extends Model
 case class Blubb(testresultId: String, numberOf200: Int)
 
 class FakeCassandraClient(url: String) {
-  val theUrl = this.url
-
   def close() {
     println(""""Closed" the fake CassandraClient for URL """ + url)
   }
