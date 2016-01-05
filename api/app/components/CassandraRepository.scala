@@ -5,7 +5,9 @@ import play.api.{Mode, Configuration, Environment}
 
 import scala.concurrent.Future
 
-case class Statistics(testresultId: String, numberOf200: Int)
+abstract class Model
+case class Statistics(testresultId: String, numberOf200: Int) extends Model
+case class Blubb(testresultId: String, numberOf200: Int)
 
 class FakeCassandraClient(url: String) {
   val theUrl = this.url
@@ -15,7 +17,7 @@ class FakeCassandraClient(url: String) {
   }
 }
 
-trait CassandraRepository[M, I] extends Repository[M, I] {
+trait CassandraRepository[M <: Model, I] extends Repository[M, I] {
   var cassandraClient: FakeCassandraClient = _
 
   override def getOneRowById(id: I): Array[String] = {
@@ -28,7 +30,7 @@ trait CassandraRepository[M, I] extends Repository[M, I] {
   }
 }
 
-abstract trait Repository[M, I] {
+abstract trait Repository[M <: Model, I] {
   def getOneRowById(id: I): Array[String]
   def rowToModel(row: Array[String]): M
 
