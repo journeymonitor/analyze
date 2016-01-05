@@ -1,6 +1,6 @@
 import java.io.File
 
-import components.{Statistics, AbstractStatisticsRepository, FakeCassandraClient}
+import components.{Statistics, AbstractRepository, FakeCassandraClient}
 import controllers.Application
 import play.api
 import play.api.{ApplicationLoader, Environment, Mode}
@@ -11,14 +11,14 @@ import org.scalatestplus.play._
 
 import scala.concurrent.Future
 
-class MockStatisticsRepository extends AbstractStatisticsRepository {
+class MockStatisticsRepository extends AbstractRepository[Statistics] {
   override def getOneById(id: String): Statistics = {
     Statistics("mockedTestresultId", 1)
   }
 }
 
 class FakeApplicationComponents(context: Context) extends AppComponents(context) {
-  override lazy val statisticsRepository: AbstractStatisticsRepository = {
+  override lazy val statisticsRepository: AbstractRepository[Statistics] = {
     new MockStatisticsRepository
   }
 }

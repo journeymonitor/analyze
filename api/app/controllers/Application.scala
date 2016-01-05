@@ -1,10 +1,10 @@
 package controllers
 
-import components.{AbstractStatisticsRepository, FakeCassandraClient}
+import components.{Statistics, AbstractRepository, FakeCassandraClient}
 import play.api._
 import play.api.mvc._
 
-class Application(statisticsRepository: AbstractStatisticsRepository) extends Controller {
+class Application(statisticsRepository: AbstractRepository[Statistics]) extends Controller {
 
   def index = Action {
     Ok(views.html.index("Your new application is ready. " + statisticsRepository.getOneById("foo").testresultId))
