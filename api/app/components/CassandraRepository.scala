@@ -27,8 +27,8 @@ trait CassandraClient {
   }
 }
 
-abstract class AbstractRepository[T, A] {
-  def getOneById(id: A): T
+abstract class AbstractRepository[Model, Id] {
+  def getOneById(id: Id): Model
 }
 
 class StatisticsRepository extends AbstractRepository[Statistics, String] with CassandraClient {
