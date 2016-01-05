@@ -1,4 +1,4 @@
-import components.CassandraComponents
+import components.CassandraRepositoryComponents
 import controllers.api.Statistics
 import play.api.ApplicationLoader.Context
 import play.api.routing.Router
@@ -10,9 +10,9 @@ class AppLoader extends ApplicationLoader {
     new AppComponents(context).application
 }
 
-class AppComponents(context: Context) extends BuiltInComponentsFromContext(context) with CassandraComponents {
+class AppComponents(context: Context) extends BuiltInComponentsFromContext(context) with CassandraRepositoryComponents {
 
-  lazy val applicationController = new controllers.Application(cassandraClient)
+  lazy val applicationController = new controllers.Application(statisticsRepository)
   lazy val statisticsController = new Statistics()
   lazy val assets = new controllers.Assets(httpErrorHandler)
 

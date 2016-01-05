@@ -1,6 +1,6 @@
 import java.io.File
 
-import components.CassandraClient
+import components.{Statistics, AbstractStatisticsRepository, FakeCassandraClient}
 import controllers.Application
 import play.api
 import play.api.{ApplicationLoader, Environment, Mode}
@@ -11,17 +11,15 @@ import org.scalatestplus.play._
 
 import scala.concurrent.Future
 
-class MockCassandraClient extends CassandraClient("cassandra://localhost:9042/mock") {
-  override def close() {
-    println("Closed the mocked Cassandra client")
+class MockStatisticsRepository extends AbstractStatisticsRepository {
+  override def getOneById(id: String): Statistics = {
+    Statistics("mockedTestresultId", 1)
   }
 }
 
 class FakeApplicationComponents(context: Context) extends AppComponents(context) {
-  override lazy val cassandraClient: CassandraClient = {
-    val client = new MockCassandraClient
-    applicationLifecycle.addStopHook(() => Future.successful(client.close()))
-    client
+  override lazy val statisticsRepository: AbstractStatisticsRepository = {
+    new MockStatisticsRepository
   }
 }
 
@@ -55,7 +53,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Your new application is ready. cassandra://localhost:9042/mock")
+      contentAsString(home) must include ("Your new application is ready. mockedTestresultId")
     }
 
     "return a JSON object with statistics for a given testresult id" in {
