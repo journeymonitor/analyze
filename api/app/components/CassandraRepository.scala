@@ -10,30 +10,36 @@ case class Statistics(testresultId: String, numberOf200: Int)
 class FakeCassandraClient(url: String) {
   val theUrl = this.url
 
-  def getOneRowById(id: String): Array[String] = {
-    Array("testresult-" + id, "123")
-  }
-
   def close() {
     println(""""Closed" the fake CassandraClient for URL """ + url)
   }
 }
 
-trait CassandraClient {
+trait CassandraRepository[Model, Id] extends Repository[Model, Id] {
   var cassandraClient: FakeCassandraClient = _
+
+  override def getOneRowById(id: Id): Array[String] = {
+    // query using cassandraClient and return
+    Array("testresult-" + id, "123")
+  }
 
   def setCassandraClient(cassandraClient: FakeCassandraClient): Unit = {
     this.cassandraClient = cassandraClient
   }
 }
 
-abstract class AbstractRepository[Model, Id] {
-  def getOneById(id: Id): Model
+abstract trait Repository[Model, Id] {
+  def getOneRowById(id: Id): Array[String]
+  def rowToModel(row: Array[String]): Model
+
+  def getOneById(id: Id): Model = {
+    val row = getOneRowById(id)
+    rowToModel(row)
+  }
 }
 
-class StatisticsRepository extends AbstractRepository[Statistics, String] with CassandraClient {
-  override def getOneById(id: String): Statistics = {
-    val row = cassandraClient.getOneRowById(id)
+class StatisticsRepository extends CassandraRepository[Statistics, String] {
+  override def rowToModel(row: Array[String]): Statistics = {
     Statistics(row(0), row(1).toInt)
   }
 }
@@ -56,7 +62,7 @@ trait CassandraRepositoryComponents {
     client
   }
 
-  lazy val statisticsRepository: AbstractRepository[Statistics, String] = {
+  lazy val statisticsRepository: Repository[Statistics, String] = {
     val repo = new StatisticsRepository
     repo.setCassandraClient(cassandraClient)
     repo

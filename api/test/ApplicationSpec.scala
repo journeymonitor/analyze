@@ -1,6 +1,6 @@
 import java.io.File
 
-import components.{Statistics, AbstractRepository, FakeCassandraClient}
+import components.{Statistics, Repository, FakeCassandraClient}
 import controllers.Application
 import play.api
 import play.api.{ApplicationLoader, Environment, Mode}
@@ -11,14 +11,18 @@ import org.scalatestplus.play._
 
 import scala.concurrent.Future
 
-class MockStatisticsRepository extends AbstractRepository[Statistics, String] {
-  override def getOneById(id: String): Statistics = {
-    Statistics("mockedTestresultId", 1)
+class MockStatisticsRepository extends Repository[Statistics, String] {
+  override def getOneRowById(id: String): Array[String] = {
+    Array("mocked-testresult-" + id, "123")
+  }
+
+  override def rowToModel(row: Array[String]): Statistics = {
+    Statistics(row(0), row(1).toInt)
   }
 }
 
 class FakeApplicationComponents(context: Context) extends AppComponents(context) {
-  override lazy val statisticsRepository: AbstractRepository[Statistics, String] = {
+  override lazy val statisticsRepository: Repository[Statistics, String] = {
     new MockStatisticsRepository
   }
 }
@@ -53,7 +57,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Your new application is ready. mockedTestresultId")
+      contentAsString(home) must include ("Your new application is ready. mocked-testresult-foo")
     }
 
     "return a JSON object with statistics for a given testresult id" in {
