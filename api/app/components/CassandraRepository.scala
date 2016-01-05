@@ -17,17 +17,13 @@ class FakeCassandraClient(url: String) {
   }
 }
 
-trait CassandraRepository[M <: Model, I] extends Repository[M, I] {
-  var cassandraClient: FakeCassandraClient = _
+abstract class CassandraRepository[M <: Model, I](cassandraClient: FakeCassandraClient) extends Repository[M, I] {
 
   override def getOneRowById(id: I): Array[String] = {
     // query using cassandraClient and return
     Array("testresult-" + id, "123")
   }
 
-  def setCassandraClient(cassandraClient: FakeCassandraClient): Unit = {
-    this.cassandraClient = cassandraClient
-  }
 }
 
 abstract trait Repository[M <: Model, I] {
@@ -40,7 +36,7 @@ abstract trait Repository[M <: Model, I] {
   }
 }
 
-class StatisticsRepository extends CassandraRepository[Statistics, String] {
+class StatisticsRepository(cassandraClient: FakeCassandraClient) extends CassandraRepository[Statistics, String](cassandraClient) {
   override def rowToModel(row: Array[String]): Statistics = {
     Statistics(row(0), row(1).toInt)
   }
@@ -65,8 +61,6 @@ trait CassandraRepositoryComponents {
   }
 
   lazy val statisticsRepository: Repository[Statistics, String] = {
-    val repo = new StatisticsRepository
-    repo.setCassandraClient(cassandraClient)
-    repo
+    new StatisticsRepository(cassandraClient)
   }
 }
