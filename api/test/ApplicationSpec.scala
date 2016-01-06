@@ -11,18 +11,14 @@ import org.scalatestplus.play._
 
 import scala.concurrent.Future
 
-class MockStatisticsRepository extends Repository[Statistics, String, Array[String]] {
-  override def getOneRowById(id: String): Array[String] = {
-    Array("mocked-testresult-" + id, "123")
-  }
-
-  override def rowToModel(row: Array[String]): Statistics = {
-    Statistics(row(0), row(1).toInt)
+class MockStatisticsRepository extends Repository[Statistics, String] {
+  override def getOneById(id: String): Statistics = {
+    Statistics("mocked-testresult-" + id, 123)
   }
 }
 
 class FakeApplicationComponents(context: Context) extends AppComponents(context) {
-  override lazy val statisticsRepository: Repository[Statistics, String, Array[String]] = {
+  override lazy val statisticsRepository: Repository[Statistics, String] = {
     new MockStatisticsRepository
   }
 }

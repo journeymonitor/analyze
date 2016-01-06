@@ -14,23 +14,23 @@ class FakeCassandraClient(url: String) {
   }
 }
 
-abstract class CassandraRepository[M <: Model, I](cassandraClient: FakeCassandraClient) extends Repository[M, I, Array[String]] {
+abstract class CassandraRepository[M <: Model, I](cassandraClient: FakeCassandraClient) extends Repository[M, I] {
 
-  override def getOneRowById(id: I): Array[String] = {
+  def rowToModel(row: Array[String]): M
+
+  def getOneRowById(id: I): Array[String] = {
     // query using cassandraClient and return
     Array("testresult-" + id, "123")
   }
 
-}
-
-abstract trait Repository[M <: Model, I, R] {
-  def getOneRowById(id: I): R
-  def rowToModel(row: R): M
-
-  def getOneById(id: I): M = {
+  override def getOneById(id: I): M = {
     val row = getOneRowById(id)
     rowToModel(row)
   }
+}
+
+abstract trait Repository[M <: Model, I] {
+  def getOneById(id: I): M
 }
 
 class StatisticsRepository(cassandraClient: FakeCassandraClient) extends CassandraRepository[Statistics, String](cassandraClient) {
@@ -57,7 +57,7 @@ trait CassandraRepositoryComponents {
     client
   }
 
-  lazy val statisticsRepository: Repository[Statistics, String, Array[String]] = {
+  lazy val statisticsRepository: Repository[Statistics, String] = {
     new StatisticsRepository(cassandraClient)
   }
 }
