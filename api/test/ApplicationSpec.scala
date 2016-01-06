@@ -18,7 +18,7 @@ class MockStatisticsRepository extends Repository[Statistics, String] {
 }
 
 class FakeApplicationComponents(context: Context) extends AppComponents(context) {
-  override lazy val statisticsRepository: Repository[Statistics, String] = {
+  override lazy val statisticsRepository = {
     new MockStatisticsRepository
   }
 }
