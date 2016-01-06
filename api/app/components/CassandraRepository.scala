@@ -7,7 +7,6 @@ import scala.concurrent.Future
 
 abstract class Model
 case class Statistics(testresultId: String, numberOf200: Int) extends Model
-case class Blubb(testresultId: String, numberOf200: Int)
 
 class FakeCassandraClient(url: String) {
   def close() {
