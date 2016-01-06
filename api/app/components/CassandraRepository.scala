@@ -15,7 +15,6 @@ class FakeCassandraClient(url: String) {
 }
 
 abstract class CassandraRepository[M <: Model, I](cassandraClient: FakeCassandraClient) extends Repository[M, I] {
-
   def rowToModel(row: Array[String]): M
 
   def getOneRowById(id: I): Array[String] = {
