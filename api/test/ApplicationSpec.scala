@@ -1,6 +1,6 @@
 import java.io.File
 
-import components.{Statistics, Repository, FakeCassandraClient}
+import components.{Statistics, Repository}
 import controllers.Application
 import play.api
 import play.api.{ApplicationLoader, Environment, Mode}
@@ -53,7 +53,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Your new application is ready. mocked-testresult-foo")
+      contentAsString(home) must include ("Your new application is ready. mocked-testresult-testcase1")
     }
 
     "return a JSON object with statistics for a given testresult id" in {

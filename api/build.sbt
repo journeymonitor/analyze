@@ -2,7 +2,7 @@ name := """api"""
 
 version := "1.0-SNAPSHOT"
 
-lazy val api = (project in file(".")).enablePlugins(PlayScala)
+enablePlugins(PlayScala)
 
 scalaVersion := "2.11.7"
 
@@ -10,7 +10,8 @@ libraryDependencies ++= Seq(
   jdbc,
   cache,
   ws,
-  "org.scalatestplus" %% "play" % "1.4.0-M4" % "test"
+  "org.scalatestplus" %% "play" % "1.4.0-M4" % "test",
+  "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.8"
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
