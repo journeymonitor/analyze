@@ -107,7 +107,7 @@ object Importer {
   def main(args: Array[String]) {
     val filename = if (args.length == 0) "" else (args(0))
 
-    val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_IMPORTER_CASSANDRAURI", "cassandra://localhost:9042/analyze")
+    val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_CASSANDRAURI", "cassandra://localhost:9042/analyze")
     val cassandraConnectionUri = CassandraConnectionUri(uriString)
 
     val sessionOption: Option[com.datastax.driver.core.Session] = try {

@@ -55,12 +55,12 @@ trait CassandraRepositoryComponents {
   lazy private val cassandraSession: Session = {
     val session: Session = environment.mode match {
       case Mode.Test => {
-        val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_API_CASSANDRAURI_TEST", "cassandra://localhost:9042/test")
+        val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_CASSANDRAURI_TEST", "cassandra://localhost:9042/test")
         val uri = CassandraConnectionUri(uriString)
         CassandraClient.createSessionAndInitKeyspace(uri)
       }
       case _ =>
-        val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_API_CASSANDRAURI", "cassandra://localhost:9042/analyze")
+        val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_CASSANDRAURI", "cassandra://localhost:9042/analyze")
         val uri = CassandraConnectionUri(uriString)
         CassandraClient.createSessionAndInitKeyspace(uri)
     }

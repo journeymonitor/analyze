@@ -9,7 +9,7 @@ class ImporterSpec extends FunSpec with Matchers {
   describe("Importing testresults") {
     it("should work if the file is valid") {
       val uriString = sys.env.getOrElse(
-        "JOURNEYMONITOR_ANALYZE_IMPORTER_CASSANDRAURI_TEST",
+        "JOURNEYMONITOR_ANALYZE_CASSANDRAURI_TEST",
         "cassandra://localhost:9042/test"
       )
       val uri = CassandraConnectionUri(uriString)
