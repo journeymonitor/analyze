@@ -8,7 +8,7 @@ class CassandraClientSpec extends FunSpec with Matchers {
 
   describe("Connecting and querying a Cassandra database") {
     it("should just work") {
-      val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_IMPORTER_CASSANDRAURI_TEST", "cassandra://localhost:9042/test")
+      val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_COMMON_CASSANDRAURI_TEST", "cassandra://localhost:9042/test")
       val uri = CassandraConnectionUri(uriString)
       val session = CassandraClient.createSessionAndInitKeyspace(uri)
 

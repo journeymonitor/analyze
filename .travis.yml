@@ -14,5 +14,7 @@ services:
   - cassandra
 before_script:
   - make travisci-test-keyspace
+  - make travisci-prod-keyspace
+  - make migrations
 after_success:
   - make travisci-after-success

@@ -9,7 +9,7 @@ import play.api.{Mode, Environment, ApplicationLoader}
 class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPerSuite with HtmlUnitFactory with BeforeAndAfter {
 
   "before" in {
-    val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_IMPORTER_CASSANDRAURI_TEST", "cassandra://localhost:9042/test")
+    val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_API_CASSANDRAURI_TEST", "cassandra://localhost:9042/test")
     val uri = CassandraConnectionUri(uriString)
     val session = CassandraClient.createSessionAndInitKeyspace(uri)
 
