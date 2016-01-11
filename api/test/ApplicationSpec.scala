@@ -1,6 +1,7 @@
 import java.io.File
 
-import components.{Statistics, Repository}
+import models.Statistics
+import repositories.Repository
 import controllers.Application
 import play.api
 import play.api.{ApplicationLoader, Environment, Mode}
