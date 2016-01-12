@@ -11,8 +11,6 @@ abstract class CassandraRepository[M <: Model, I](session: Session, tablename: S
   def getOneRowById(id: I): Row = {
     val selectStmt =
       select()
-        .column("testresult_id")
-        .column("number_of_200")
         .from(tablename)
         .where(QueryBuilder.eq("testcase_id", id))
         .limit(1)
