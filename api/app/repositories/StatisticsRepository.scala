@@ -1,11 +1,11 @@
 package repositories
 
 import com.datastax.driver.core.{Row, Session}
-import models.Statistics
+import models.StatisticsModel
 
 class StatisticsRepository(session: Session)
-  extends CassandraRepository[Statistics, String](session, "statistics", "testcase_id") {
-  override def rowToModel(row: Row): Statistics = {
-    Statistics(row.getString("testresult_id"), row.getInt("number_of_200"))
+  extends CassandraRepository[StatisticsModel, String](session, "statistics", "testcase_id") {
+  override def rowToModel(row: Row): StatisticsModel = {
+    StatisticsModel(row.getString("testresult_id"), row.getInt("number_of_200"))
   }
 }

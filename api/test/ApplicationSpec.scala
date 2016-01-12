@@ -1,6 +1,6 @@
 import java.io.File
 
-import models.Statistics
+import models.StatisticsModel
 import org.scalatestplus.play._
 import play.api
 import play.api.ApplicationLoader.Context
@@ -9,9 +9,9 @@ import play.api.test._
 import play.api.{ApplicationLoader, Environment, Mode}
 import repositories.Repository
 
-class MockStatisticsRepository extends Repository[Statistics, String] {
-  override def getOneById(id: String): Statistics = {
-    Statistics("mocked-testresult-" + id, 123)
+class MockStatisticsRepository extends Repository[StatisticsModel, String] {
+  override def getOneById(id: String): StatisticsModel = {
+    StatisticsModel("mocked-testresult-" + id, 123)
   }
 }
 
