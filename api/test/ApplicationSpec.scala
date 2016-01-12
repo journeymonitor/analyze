@@ -1,16 +1,13 @@
 import java.io.File
 
 import models.Statistics
-import repositories.Repository
-import controllers.Application
-import play.api
-import play.api.{ApplicationLoader, Environment, Mode}
-import play.api.ApplicationLoader.Context
-import play.api.test._
-import play.api.test.Helpers._
 import org.scalatestplus.play._
-
-import scala.concurrent.Future
+import play.api
+import play.api.ApplicationLoader.Context
+import play.api.test.Helpers._
+import play.api.test._
+import play.api.{ApplicationLoader, Environment, Mode}
+import repositories.Repository
 
 class MockStatisticsRepository extends Repository[Statistics, String] {
   override def getOneById(id: String): Statistics = {
@@ -41,7 +38,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
     )
   }
 
-  "Application" should {
+  "Non-integrated application" should {
 
     "send 404 on a bad request" in {
       val Some(wrongRoute) = route(FakeRequest(GET, "/boum"))
@@ -54,16 +51,16 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Your new application is ready. mocked-testresult-testcase1")
+      contentAsString(home) must include ("Your new application is ready.")
     }
 
-    "return a JSON object with statistics for a given testresult id" in {
+    "return a JSON object with statistics for a given testcase id" in {
       val Some(response) = route(FakeRequest(GET, "/testresults/abcd/statistics/"))
 
       status(response) mustBe OK
       contentType(response) mustBe Some("application/json")
       charset(response) mustBe Some("utf-8")
-      contentAsString(response) mustBe """{"foo":"a","bar":"b"}"""
+      contentAsString(response) mustBe """{"testresultId":"mocked-testresult-abcd","numberOf200":123}"""
     }
   }
 

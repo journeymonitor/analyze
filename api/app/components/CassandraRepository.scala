@@ -4,8 +4,8 @@ import com.datastax.driver.core.Session
 import com.journeymonitor.analyze.common.{CassandraClient, CassandraConnectionUri}
 import models.Statistics
 import play.api.inject.ApplicationLifecycle
-import play.api.{Mode, Configuration, Environment}
-import repositories.{StatisticsRepository, Repository}
+import play.api.{Configuration, Environment, Mode}
+import repositories.{Repository, StatisticsRepository}
 
 import scala.concurrent.Future
 

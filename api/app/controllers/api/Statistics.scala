@@ -1,20 +1,20 @@
 package controllers.api
 
-import play.api.mvc._
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
+import play.api.mvc._
+import repositories.Repository
 
-case class Thing(foo: String, bar: String)
+class Statistics(statisticsRepository: Repository[models.Statistics, String]) extends Controller {
 
-class Statistics extends Controller {
+  implicit val StatisticsWrites: Writes[models.Statistics] = (
+    (JsPath \ "testresultId").write[String] and
+    (JsPath \ "numberOf200").write[Int]
+  )(unlift(models.Statistics.unapply))
 
-  implicit val ThingWrites: Writes[Thing] = (
-    (JsPath \ "foo").write[String] and
-    (JsPath \ "bar").write[String]
-  )(unlift(Thing.unapply))
-
-  def show(id: String) = Action {
-    Ok(Json.toJson(Thing("a", "b")))
+  def show(testcaseId: String) = Action {
+    val statistics = statisticsRepository.getOneById(testcaseId)
+    Ok(Json.toJson(statistics))
   }
 
 }

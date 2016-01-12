@@ -4,11 +4,11 @@ import com.journeymonitor.analyze.common.{CassandraClient, CassandraConnectionUr
 import org.scalatest.BeforeAndAfter
 import org.scalatestplus.play._
 import play.api
-import play.api.{Mode, Environment, ApplicationLoader}
+import play.api.{ApplicationLoader, Environment, Mode}
 
 class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPerSuite with HtmlUnitFactory with BeforeAndAfter {
 
-  "before" in {
+  before {
     val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_CASSANDRAURI_TEST", "cassandra://localhost:9042/test")
     val uri = CassandraConnectionUri(uriString)
     val session = CassandraClient.createSessionAndInitKeyspace(uri)
@@ -24,13 +24,17 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
       )
     )
 
-  "Application" should {
+  "Integrated application" should {
 
-    "work from within a browser" in {
-
+    "render the index page" in {
       go to "http://localhost:" + port
-
-      pageSource must include ("Your new application is ready. testresult1")
+      pageSource must include ("Your new application is ready.")
     }
+
+    "return a JSON object with statistics for a given testcase id" in {
+      go to "http://localhost:" + port + "/testresults/testcase1/statistics/"
+      pageSource mustBe """{"testresultId":"testresult1","numberOf200":123}"""
+    }
+
   }
 }
