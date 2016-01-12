@@ -5,14 +5,15 @@ import com.datastax.driver.core.querybuilder.QueryBuilder._
 import com.datastax.driver.core.{Row, Session}
 import models.Model
 
-abstract class CassandraRepository[M <: Model, I](session: Session, tablename: String) extends Repository[M, I] {
+abstract class CassandraRepository[M <: Model, I](session: Session, tablename: String, partitionKeyName: String)
+  extends Repository[M, I] {
   def rowToModel(row: Row): M
 
-  def getOneRowById(id: I): Row = {
+  def getOneRowBySinglePartitionKeyId(partitionKeyValue: I): Row = {
     val selectStmt =
       select()
         .from(tablename)
-        .where(QueryBuilder.eq("testcase_id", id))
+        .where(QueryBuilder.eq(partitionKeyName, partitionKeyValue))
         .limit(1)
 
     val resultSet = session.execute(selectStmt)
@@ -21,7 +22,7 @@ abstract class CassandraRepository[M <: Model, I](session: Session, tablename: S
   }
 
   override def getOneById(id: I): M = {
-    val row = getOneRowById(id)
+    val row = getOneRowBySinglePartitionKeyId(id)
     rowToModel(row)
   }
 }
