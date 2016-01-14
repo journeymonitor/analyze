@@ -11,7 +11,7 @@ import repositories.Repository
 
 class MockStatisticsRepository extends Repository[StatisticsModel, String] {
   override def getOneById(id: String): StatisticsModel = {
-    StatisticsModel("mocked-testresult-" + id, 123)
+    StatisticsModel("mocked-testresult-" + id, 987, 123, 456, 789)
   }
 }
 
@@ -60,7 +60,14 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       status(response) mustBe OK
       contentType(response) mustBe Some("application/json")
       charset(response) mustBe Some("utf-8")
-      contentAsString(response) mustBe """{"testresultId":"mocked-testresult-abcd","numberOf200":123}"""
+      contentAsString(response) mustBe
+        """
+          |{"testresultId":"mocked-testresult-abcd",
+          |"runtimeMilliseconds":987,
+          |"numberOf200":123,
+          |"numberOf400":456,
+          |"numberOf500":789}
+          |""".stripMargin.replace("\n", "")
     }
   }
 
