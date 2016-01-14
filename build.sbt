@@ -35,6 +35,10 @@ lazy val sparkDependencies = Seq (
 )
 
 
+lazy val common = project
+  .settings(commonSettings:_*)
+  .settings(libraryDependencies ++= (testDependencies ++ cassandraDependencies))
+
 lazy val spark = project.in(file("spark"))
   .settings(commonSettings:_*)
   .settings(
@@ -49,10 +53,6 @@ lazy val importer = project.in(file("importer"))
   .settings(libraryDependencies ++= (json4sDependencies ++ testDependencies ++ cassandraDependencies))
   .settings(assemblyJarName in assembly := "journeymonitor-analyze-importer-assembly.jar")
   .dependsOn(common)
-
-val common = project
-  .settings(commonSettings:_*)
-  .settings(libraryDependencies ++= (testDependencies ++ cassandraDependencies))
 
 lazy val api = project
   .settings(commonSettings:_*)
