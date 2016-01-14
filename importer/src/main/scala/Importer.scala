@@ -32,6 +32,7 @@ import com.journeymonitor.analyze.common.{CassandraConnectionUri,CassandraClient
 
 object Importer {
   def printMem() {
+    return
     val mb = 1024*1024
     val runtime = Runtime.getRuntime
     println("** Used Memory:  " + (runtime.totalMemory - runtime.freeMemory) / mb)
