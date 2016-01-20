@@ -33,6 +33,16 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
       """.stripMargin
     )
 
+    // Different testcase
+    session.execute(
+      """
+        |INSERT INTO statistics
+        | (testcase_id, testresult_id, datetime_run,               runtime_milliseconds, number_of_200, number_of_400, number_of_500)
+        | VALUES
+        | ('testcase2', 'testresult1', '2016-01-07 04:32:12+0000', 333,                  123,           456,           789);
+      """.stripMargin
+    )
+
     session.execute(
       """
         |INSERT INTO statistics
