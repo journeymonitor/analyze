@@ -13,6 +13,12 @@ class MockStatisticsRepository extends Repository[StatisticsModel, String] {
   override def getOneById(id: String): StatisticsModel = {
     StatisticsModel("mocked-testresult-" + id, 987, 123, 456, 789)
   }
+
+  override def getNById(id: String, n: Int): List[StatisticsModel] = {
+    List(
+      StatisticsModel("mocked-testresult-" + id, 987, 123, 456, 789)
+    )
+  }
 }
 
 class FakeApplicationComponents(context: Context) extends AppComponents(context) {
@@ -54,19 +60,19 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       contentAsString(home) must include ("Your new application is ready.")
     }
 
-    "return a JSON object with statistics for a given testcase id" in {
-      val Some(response) = route(FakeRequest(GET, "/testresults/abcd/statistics/"))
+    "return a JSON array with the latest statistics entry for a given testcase id" in {
+      val Some(response) = route(FakeRequest(GET, "/testresults/abcd/statistics/latest/?n=1"))
 
       status(response) mustBe OK
       contentType(response) mustBe Some("application/json")
       charset(response) mustBe Some("utf-8")
       contentAsString(response) mustBe
         """
-          |{"testresultId":"mocked-testresult-abcd",
+          |[{"testresultId":"mocked-testresult-abcd",
           |"runtimeMilliseconds":987,
           |"numberOf200":123,
           |"numberOf400":456,
-          |"numberOf500":789}
+          |"numberOf500":789}]
           |""".stripMargin.replace("\n", "")
     }
   }

@@ -16,9 +16,13 @@ class Statistics(statisticsRepository: Repository[StatisticsModel, String]) exte
     (JsPath \ "numberOf500").write[Int]
   )(unlift(StatisticsModel.unapply))
 
-  def show(testcaseId: String) = Action {
-    val statistics = statisticsRepository.getOneById(testcaseId)
-    Ok(Json.toJson(statistics))
+  def show(testcaseId: String, n: Int) = Action {
+    if (n == 1) {
+      Ok(Json.toJson(List(statisticsRepository.getOneById(testcaseId))))
+    } else {
+      Ok(Json.toJson(statisticsRepository.getNById(testcaseId, n)))
+    }
+
   }
 
 }

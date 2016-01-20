@@ -29,7 +29,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
         |INSERT INTO statistics
         | (testcase_id, testresult_id, datetime_run,               runtime_milliseconds, number_of_200, number_of_400, number_of_500)
         | VALUES
-        | ('testcase1', 'testresult1', '2016-01-07 03:32:12+0000', 333,                  123,           456,           789);
+        | ('testcase1', 'testresult3', '2016-01-07 03:32:12+0000', 333,                  123,           456,           789);
       """.stripMargin
     )
 
@@ -39,7 +39,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
         |INSERT INTO statistics
         | (testcase_id, testresult_id, datetime_run,               runtime_milliseconds, number_of_200, number_of_400, number_of_500)
         | VALUES
-        | ('testcase2', 'testresult1', '2016-01-07 04:32:12+0000', 333,                  123,           456,           789);
+        | ('testcase2', 'testresult3', '2016-01-07 04:32:12+0000', 333,                  123,           456,           789);
       """.stripMargin
     )
 
@@ -48,7 +48,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
         |INSERT INTO statistics
         | (testcase_id, testresult_id, datetime_run,               runtime_milliseconds, number_of_200, number_of_400, number_of_500)
         | VALUES
-        | ('testcase1', 'testresult1', '2016-01-07 02:32:12+0000', 222,                  123,           456,           789);
+        | ('testcase1', 'testresult2', '2016-01-07 02:32:12+0000', 222,                  122,           452,           782);
       """.stripMargin
     )
   }
@@ -68,16 +68,43 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
       pageSource must include ("Your new application is ready.")
     }
 
-    "return a JSON object with the latest statistics for a given testcase id" in {
-      go to "http://localhost:" + port + "/testresults/testcase1/statistics/"
+    "return a JSON array with the latest statistics entry for a given testcase id" in {
+      go to "http://localhost:" + port + "/testresults/testcase1/statistics/latest/?n=1"
       pageSource mustBe
         """
-          |{"testresultId":"testresult1",
-          |"runtimeMilliseconds":333,
-          |"numberOf200":123,
-          |"numberOf400":456,
-          |"numberOf500":789}
-          |""".stripMargin.replace("\n", "")
+          |[
+          |  {
+          |    "testresultId":"testresult3",
+          |    "runtimeMilliseconds":333,
+          |    "numberOf200":123,
+          |    "numberOf400":456,
+          |    "numberOf500":789
+          |  }
+          |]
+          |""".stripMargin.replace("\n", "").replace(" ", "")
+    }
+
+    "return a JSON array with the latest N statistics entries for a given testcase id" in {
+      go to "http://localhost:" + port + "/testresults/testcase1/statistics/latest/?n=2"
+      pageSource mustBe
+        """
+          |[
+          |  {
+          |    "testresultId":"testresult3",
+          |    "runtimeMilliseconds":333,
+          |    "numberOf200":123,
+          |    "numberOf400":456,
+          |    "numberOf500":789
+          |  },
+          |  {
+          |    "testresultId":"testresult2",
+          |    "runtimeMilliseconds":222,
+          |    "numberOf200":122,
+          |    "numberOf400":452,
+          |    "numberOf500":782
+          |  }
+          |]
+          |""".stripMargin.replace("\n", "").replace(" ", "")
     }
 
   }
