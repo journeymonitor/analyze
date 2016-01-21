@@ -10,18 +10,6 @@ abstract class CassandraRepository[M <: Model, I](session: Session, tablename: S
   extends Repository[M, I] {
   def rowToModel(row: Row): M
 
-  def getOneRowBySinglePartitionKeyValue(partitionKeyValue: I): Row = {
-    val selectStmt =
-      select()
-        .from(tablename)
-        .where(QueryBuilder.eq(partitionKeyName, partitionKeyValue))
-        .limit(1)
-
-    val resultSet = session.execute(selectStmt)
-    val row = resultSet.one()
-    row
-  }
-  
   def getNBySinglePartitionKeyValue(partitionKeyValue: I, n: Int): ResultSet = {
     val selectStmt =
       select()
@@ -30,11 +18,6 @@ abstract class CassandraRepository[M <: Model, I](session: Session, tablename: S
         .limit(n)
 
     session.execute(selectStmt)
-  }
-
-  override def getOneById(id: I): M = {
-    val row = getOneRowBySinglePartitionKeyValue(id)
-    rowToModel(row)
   }
 
   override def getNById(id: I, n: Int): List[M] = {

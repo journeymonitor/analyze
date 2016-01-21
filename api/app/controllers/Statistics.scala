@@ -17,12 +17,7 @@ class Statistics(statisticsRepository: Repository[StatisticsModel, String]) exte
   )(unlift(StatisticsModel.unapply))
 
   def show(testcaseId: String, n: Int) = Action {
-    if (n == 1) {
-      Ok(Json.toJson(List(statisticsRepository.getOneById(testcaseId))))
-    } else {
-      Ok(Json.toJson(statisticsRepository.getNById(testcaseId, n)))
-    }
-
+    Ok(Json.toJson(statisticsRepository.getNById(testcaseId, n)))
   }
 
 }

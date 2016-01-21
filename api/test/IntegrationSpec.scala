@@ -69,7 +69,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
     }
 
     "return a JSON array with the latest statistics entry for a given testcase id" in {
-      go to "http://localhost:" + port + "/testresults/testcase1/statistics/latest/?n=1"
+      go to "http://localhost:" + port + "/testcases/testcase1/statistics/latest/?n=1"
       pageSource mustBe
         """
           |[
@@ -85,7 +85,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
     }
 
     "return a JSON array with the latest N statistics entries for a given testcase id" in {
-      go to "http://localhost:" + port + "/testresults/testcase1/statistics/latest/?n=2"
+      go to "http://localhost:" + port + "/testcases/testcase1/statistics/latest/?n=2"
       pageSource mustBe
         """
           |[

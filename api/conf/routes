@@ -9,4 +9,4 @@ GET     /                           controllers.Application.index
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
 # REST API
-GET     /testresults/:testcaseId/statistics/latest/    controllers.Statistics.show(testcaseId: String, n: Int ?= 1)
+GET     /testcases/:testcaseId/statistics/latest/    controllers.Statistics.show(testcaseId: String, n: Int ?= 1)
