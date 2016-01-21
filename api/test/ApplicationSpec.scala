@@ -12,7 +12,7 @@ import repositories.Repository
 class MockStatisticsRepository extends Repository[StatisticsModel, String] {
   override def getNById(id: String, n: Int): List[StatisticsModel] = {
     List(
-      StatisticsModel("mocked-testresult-" + id, 987, 123, 456, 789)
+      StatisticsModel("mocked-" + id, 987, 123, 456, 789)
     )
   }
 }
@@ -57,14 +57,14 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
     }
 
     "return a JSON array with the latest statistics entry for a given testcase id" in {
-      val Some(response) = route(FakeRequest(GET, "/testcases/abcd/statistics/latest/?n=1"))
+      val Some(response) = route(FakeRequest(GET, "/testcases/testcase1/statistics/latest/?n=1"))
 
       status(response) mustBe OK
       contentType(response) mustBe Some("application/json")
       charset(response) mustBe Some("utf-8")
       contentAsString(response) mustBe
         """
-          |[{"testresultId":"mocked-testresult-abcd",
+          |[{"testresultId":"mocked-testcase1",
           |"runtimeMilliseconds":987,
           |"numberOf200":123,
           |"numberOf400":456,
