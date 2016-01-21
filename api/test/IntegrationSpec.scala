@@ -107,5 +107,10 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |""".stripMargin.replace("\n", "").replace(" ", "")
     }
 
+    "return an empty JSON array if no statistics exist for a given testcase id" in {
+      go to "http://localhost:" + port + "/testcases/testcaseFoo/statistics/latest/?n=2"
+      pageSource mustBe "[]"
+    }
+
   }
 }
