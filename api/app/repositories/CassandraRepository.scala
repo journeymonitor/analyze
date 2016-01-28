@@ -5,6 +5,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder._
 import com.datastax.driver.core.{ResultSet, Row, Session}
 import models.Model
 import scala.collection.JavaConversions._
+import scala.util.Try
 
 abstract class CassandraRepository[M <: Model, I](session: Session, tablename: String, partitionKeyName: String)
   extends Repository[M, I] {
@@ -20,9 +21,11 @@ abstract class CassandraRepository[M <: Model, I](session: Session, tablename: S
     session.execute(selectStmt)
   }
 
-  override def getNById(id: I, n: Int): List[M] = {
-    val rows = getNBySinglePartitionKeyValue(id, n).all().toList
-    rows.map(row => rowToModel(row))
+  override def getNById(id: I, n: Int): Try[List[M]] = {
+    Try {
+      val rows = getNBySinglePartitionKeyValue(id, n).all().toList
+      rows.map(row => rowToModel(row))
+    }
   }
 
 }

@@ -9,11 +9,18 @@ import play.api.test._
 import play.api.{ApplicationLoader, Environment, Mode}
 import repositories.Repository
 
+import scala.util.Try
+
 class MockStatisticsRepository extends Repository[StatisticsModel, String] {
-  override def getNById(id: String, n: Int): List[StatisticsModel] = {
-    List(
-      StatisticsModel("mocked-" + id, 987, 123, 456, 789)
-    )
+  override def getNById(id: String, n: Int): Try[List[StatisticsModel]] = {
+    Try {
+      id match {
+        case "testcaseWithFailure" => throw new Exception("blubb")
+        case id => List(
+          StatisticsModel("mocked-" + id, 987, 123, 456, 789)
+        )
+      }
+    }
   }
 }
 
@@ -70,6 +77,15 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
           |"numberOf400":456,
           |"numberOf500":789}]
           |""".stripMargin.replace("\n", "")
+    }
+
+    "return a JSON object with an error message if there is a problem with the repository" in {
+      val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithFailure/statistics/latest/?n=1"))
+
+      status(response) mustBe INTERNAL_SERVER_ERROR
+      contentType(response) mustBe Some("application/json")
+      charset(response) mustBe Some("utf-8")
+      contentAsString(response) mustBe """{"message":"An error occured"}"""
     }
   }
 

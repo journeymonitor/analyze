@@ -6,6 +6,8 @@ import play.api.libs.json._
 import play.api.mvc._
 import repositories.Repository
 
+import scala.util.{Success,Failure}
+
 class Statistics(statisticsRepository: Repository[StatisticsModel, String]) extends Controller {
 
   implicit val StatisticsWrites: Writes[StatisticsModel] = (
@@ -17,7 +19,10 @@ class Statistics(statisticsRepository: Repository[StatisticsModel, String]) exte
   )(unlift(StatisticsModel.unapply))
 
   def show(testcaseId: String, n: Int) = Action {
-    Ok(Json.toJson(statisticsRepository.getNById(testcaseId, n)))
+    statisticsRepository.getNById(testcaseId, n) match {
+      case Success(statistics: List[StatisticsModel]) => Ok(Json.toJson(statistics))
+      case Failure(ex) => InternalServerError(Json.toJson(Map("message" -> "An error occured")))
+    }
   }
 
 }
