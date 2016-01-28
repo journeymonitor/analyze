@@ -1,14 +1,22 @@
 import java.io.File
 
+import com.datastax.driver.core.querybuilder.QueryBuilder._
+import com.journeymonitor.analyze.common.{CassandraClient, CassandraConnectionUri}
+import org.scassandra.server.ServerStubRunner
+import scala.collection.JavaConversions._ // required to make Map[String, Any] work
 import models.StatisticsModel
 import org.scalatestplus.play._
+import org.scassandra.http.client.PrimingRequest
+import org.scassandra.http.client.PrimingRequest.then
+import org.scassandra.http.client.types.ColumnMetadata.column
+import org.scassandra.junit.ScassandraServerRule
+import org.scassandra.cql.PrimitiveType._
 import play.api
 import play.api.ApplicationLoader.Context
 import play.api.test.Helpers._
 import play.api.test._
 import play.api.{ApplicationLoader, Environment, Mode}
 import repositories.Repository
-
 import scala.util.Try
 
 class MockStatisticsRepository extends Repository[StatisticsModel, String] {
@@ -87,6 +95,44 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       charset(response) mustBe Some("utf-8")
       contentAsString(response) mustBe """{"message":"An error occured"}"""
     }
+  }
+
+  "Querying scassandra" should {
+
+    "work" in {
+      val s = new ServerStubRunner()
+      s.start()
+      Thread.sleep(1000L)
+
+      val sc = new ScassandraServerRule()
+      val pc = sc.primingClient()
+      val ac = sc.activityClient()
+
+      val row = Map[String, Any]("name" -> "John Doe", "age" -> 42)
+
+      pc.prime(PrimingRequest.queryBuilder()
+        .withQuery("""SELECT name,age FROM foo;""")
+          .withThen(then()
+            .withColumnTypes(column("name", TEXT), column("age", INT))
+            .withRows(row)
+        )
+        .build()
+      )
+
+      val uri = CassandraConnectionUri("cassandra://localhost:8042/scassandra")
+      val session = CassandraClient.createSessionAndInitKeyspace(uri)
+
+      val selectStmt = select()
+        .column("name")
+        .column("age")
+        .from("foo")
+
+      val resultSet = session.execute(selectStmt)
+      val resultRow = resultSet.one()
+      resultRow.getString("name") must be("John Doe")
+      resultRow.getInt("age") must be(42)
+    }
+
   }
 
 }
