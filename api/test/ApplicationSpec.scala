@@ -102,7 +102,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
     "work" in {
       val s = new ServerStubRunner()
       s.start()
-      Thread.sleep(1000L)
+      Thread.sleep(10000L)
 
       val sc = new ScassandraServerRule()
       val pc = sc.primingClient()
