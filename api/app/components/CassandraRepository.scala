@@ -16,7 +16,7 @@ trait CassandraRepositoryComponents {
   def configuration: Configuration
   def applicationLifecycle: ApplicationLifecycle
 
-  lazy private val cassandraSession: Session = {
+  def cassandraSession: Session = {
     val session: Session = environment.mode match {
       case Mode.Test => {
         val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_CASSANDRAURI_TEST", "cassandra://localhost:9042/test")
