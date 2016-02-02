@@ -2,7 +2,7 @@ package com.journeymonitor.analyze.common
 
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder._
-import org.scalatest.{Matchers, FunSpec}
+import org.scalatest.{FunSpec, Matchers}
 
 class CassandraClientSpec extends FunSpec with Matchers {
 

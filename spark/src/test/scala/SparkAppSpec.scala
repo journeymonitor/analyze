@@ -2,8 +2,7 @@ package com.journeymonitor.analyze.sparkapp
 
 import java.text.SimpleDateFormat
 
-import org.apache.spark.SparkConf
-import org.apache.spark._
+import org.apache.spark.{SparkConf, _}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 import org.scalatest.{BeforeAndAfter, FunSpec, Matchers}

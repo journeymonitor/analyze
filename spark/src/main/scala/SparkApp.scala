@@ -1,9 +1,8 @@
 package com.journeymonitor.analyze.sparkapp
 
-import org.apache.spark._
-import org.apache.spark.SparkContext._
-import org.apache.spark.rdd.RDD
 import com.datastax.spark.connector._
+import org.apache.spark._
+import org.apache.spark.rdd.RDD
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 

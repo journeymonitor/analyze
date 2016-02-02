@@ -1,6 +1,6 @@
 package com.journeymonitor.analyze.common
 
-import org.scalatest.{Matchers, FunSpec}
+import org.scalatest.{FunSpec, Matchers}
 
 class CassandraConnectionUriSpec extends FunSpec with Matchers {
 

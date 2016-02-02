@@ -2,10 +2,9 @@ package com.journeymonitor.analyze.importer
 
 import java.text.SimpleDateFormat
 
+import com.journeymonitor.analyze.common.{CassandraClient, CassandraConnectionUri}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import scala.io.BufferedSource
-import com.journeymonitor.analyze.common.{CassandraConnectionUri,CassandraClient}
 
 /*
   Format of one entry in JSON array as produced by MONITOR:
