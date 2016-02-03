@@ -1,6 +1,6 @@
 package repositories
 
-import com.datastax.driver.core.exceptions.ReadTimeoutException
+import com.datastax.driver.core.exceptions.{NoHostAvailableException, ReadTimeoutException}
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder._
 import com.datastax.driver.core.{ResultSet, Row, Session}
@@ -31,9 +31,10 @@ abstract class CassandraRepository[M <: Model, I](session: Session, tablename: S
     try {
       fn((actualOriginalNumberOfTries - numberOfTries) + 1)
     } catch {
-      case e: ReadTimeoutException =>
+      case e @ (_ : ReadTimeoutException | _: NoHostAvailableException) => {
         if (numberOfTries > 1) retry(numberOfTries - 1, Some(actualOriginalNumberOfTries))(fn)
         else throw e
+      }
     }
   }
 

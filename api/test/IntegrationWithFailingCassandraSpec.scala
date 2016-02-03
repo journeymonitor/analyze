@@ -58,7 +58,7 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
 
     import scala.collection.JavaConversions._ // required to map from Scala 'Any' to Java '? extends Object>'
     val row = Map[String, Any](
-      "testresult_id" -> "testresultFoo",
+      "testresult_id" -> "foo",
       "runtime_milliseconds" -> 42,
       "number_of_200" -> 23,
       "number_of_400" -> 4,
@@ -67,6 +67,56 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
 
     pc.prime(PrimingRequest.queryBuilder()
       .withQuery(query2readtimeouts + " /* 3. try */")
+      .withThen(then()
+        .withColumnTypes(
+          column("testresult_id", TEXT),
+          column("runtime_milliseconds", INT),
+          column("number_of_200", INT),
+          column("number_of_400", INT),
+          column("number_of_500", INT)
+        )
+        .withRows(row)
+      )
+      .build()
+    )
+
+    val query3unavailable = "SELECT * FROM statistics WHERE testcase_id='testcase3unavailable' LIMIT 2;"
+    val unavailable = then().withResult(PrimingRequest.Result.unavailable)
+
+    pc.prime(PrimingRequest.queryBuilder()
+      .withQuery(query3unavailable + " /* 1. try */")
+      .withThen(unavailable)
+      .build()
+    )
+
+    pc.prime(PrimingRequest.queryBuilder()
+      .withQuery(query3unavailable + " /* 2. try */")
+      .withThen(unavailable)
+      .build()
+    )
+
+    pc.prime(PrimingRequest.queryBuilder()
+      .withQuery(query3unavailable + " /* 3. try */")
+      .withThen(unavailable)
+      .build()
+    )
+
+    val query2unavailable = "SELECT * FROM statistics WHERE testcase_id='testcase2unavailable' LIMIT 2;"
+
+    pc.prime(PrimingRequest.queryBuilder()
+      .withQuery(query2unavailable + " /* 1. try */")
+      .withThen(unavailable)
+      .build()
+    )
+
+    pc.prime(PrimingRequest.queryBuilder()
+      .withQuery(query2unavailable + " /* 2. try */")
+      .withThen(unavailable)
+      .build()
+    )
+
+    pc.prime(PrimingRequest.queryBuilder()
+      .withQuery(query2unavailable + " /* 3. try */")
       .withThen(then()
         .withColumnTypes(
           column("testresult_id", TEXT),
@@ -112,7 +162,24 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
       go to "http://localhost:" + port + "/testcases/testcase2readtimeouts/statistics/latest/?n=2"
       pageSource mustBe
         """
-          |[{"testresultId":"testresultFoo",
+          |[{"testresultId":"foo",
+          |"runtimeMilliseconds":42,
+          |"numberOf200":23,
+          |"numberOf400":4,
+          |"numberOf500":5}]
+          |""".stripMargin.replace("\n", "")
+    }
+
+    "return an error upon encountering 3x 'Cassandra unavailable' in a row" in {
+      go to "http://localhost:" + port + "/testcases/testcase3unavailable/statistics/latest/?n=2"
+      pageSource mustBe """{"message":"An error occured"}"""
+    }
+
+    "return a result upon encountering only 2x 'Cassandra unavailable' in a row followed by a success" in {
+      go to "http://localhost:" + port + "/testcases/testcase2unavailable/statistics/latest/?n=2"
+      pageSource mustBe
+        """
+          |[{"testresultId":"foo",
           |"runtimeMilliseconds":42,
           |"numberOf200":23,
           |"numberOf400":4,
