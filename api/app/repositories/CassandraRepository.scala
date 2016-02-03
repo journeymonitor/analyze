@@ -25,29 +25,25 @@ abstract class CassandraRepository[M <: Model, I](session: Session, tablename: S
       session.execute(selectStmt)
   }
 
+  // Based on http://stackoverflow.com/a/7931459/715256
+  private def retry[T](numberOfTries: Int, originalNumberOfTries: Option[Int] = None)(fn: (Int) => T): T = {
+    val actualOriginalNumberOfTries = originalNumberOfTries.getOrElse(numberOfTries)
+    try {
+      fn((actualOriginalNumberOfTries - numberOfTries) + 1)
+    } catch {
+      case e: ReadTimeoutException =>
+        if (numberOfTries > 1) retry(numberOfTries - 1, Some(actualOriginalNumberOfTries))(fn)
+        else throw e
+    }
+  }
+
   override def getNById(id: I, n: Int): Try[List[M]] = {
     Try {
-
-      // There's probably a very clever functional approach to
-      // "Try it 3 times, then finally fail", see e.g.
-      // http://stackoverflow.com/questions/28506466/already-existing-functional-way-for-a-retry-until-in-scala
-      try {
-        val rows = getNBySinglePartitionKeyValue(id, n, 1).all().toList
+      val func = (nthTry: Int) => {
+        val rows = getNBySinglePartitionKeyValue(id, n, nthTry).all().toList
         rows.map(row => rowToModel(row))
-      } catch {
-        case e: ReadTimeoutException => {
-          try {
-            val rows = getNBySinglePartitionKeyValue(id, n, 2).all().toList
-            rows.map(row => rowToModel(row))
-          } catch {
-            case e: ReadTimeoutException => {
-              val rows = getNBySinglePartitionKeyValue(id, n, 3).all().toList
-              rows.map(row => rowToModel(row))
-            }
-          }
-        }
       }
-
+      retry(3)(func)
     }
   }
 
