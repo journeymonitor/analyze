@@ -14,6 +14,7 @@ class MockStatisticsRepository extends Repository[StatisticsModel, String] {
     Try {
       id match {
         case "testcaseWithFailure" => throw new Exception("blubb")
+        case "testcaseWithoutStatistics" => List.empty[StatisticsModel]
         case id => List(
           StatisticsModel("mocked-" + id, 987, 123, 456, 789)
         )
@@ -84,6 +85,15 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       contentType(response) mustBe Some("application/json")
       charset(response) mustBe Some("utf-8")
       contentAsString(response) mustBe """{"message":"An error occured"}"""
+    }
+
+    "return an empty JSON array if no statistics for a given testcase id exist" in {
+      val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithoutStatistics/statistics/latest/?n=1"))
+
+      status(response) mustBe OK
+      contentType(response) mustBe Some("application/json")
+      charset(response) mustBe Some("utf-8")
+      contentAsString(response) mustBe "[]"
     }
   }
 
