@@ -1,4 +1,4 @@
-package models
+package com.journeymonitor.analyze.common.models
 
 case class StatisticsModel(testresultId: String,
                            runtimeMilliseconds: Int,

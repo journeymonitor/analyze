@@ -1,7 +1,7 @@
-package repositories
+package com.journeymonitor.analyze.common.repositories
 
 import com.datastax.driver.core.{Row, Session}
-import models.StatisticsModel
+import com.journeymonitor.analyze.common.models.StatisticsModel
 
 class StatisticsRepository(session: Session)
   extends CassandraRepository[StatisticsModel, String](session, "statistics", "testcase_id") {

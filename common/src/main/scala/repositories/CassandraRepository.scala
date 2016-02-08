@@ -1,10 +1,10 @@
-package repositories
+package com.journeymonitor.analyze.common.repositories
 
 import com.datastax.driver.core.exceptions.{NoHostAvailableException, ReadTimeoutException}
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder._
 import com.datastax.driver.core.{ResultSet, Row, Session}
-import models.Model
+import com.journeymonitor.analyze.common.models.Model
 import scala.collection.JavaConversions._
 import scala.util.Try
 
