@@ -1,10 +1,10 @@
 package controllers
 
-import models.StatisticsModel
+import com.journeymonitor.analyze.common.models.StatisticsModel
+import com.journeymonitor.analyze.common.repositories.Repository
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc._
-import repositories.Repository
 
 import scala.util.{Success,Failure}
 

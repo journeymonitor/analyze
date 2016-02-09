@@ -1,14 +1,12 @@
 package components
 
 import com.datastax.driver.core.Session
+import com.journeymonitor.analyze.common.models.StatisticsModel
+import com.journeymonitor.analyze.common.repositories.{StatisticsRepository, Repository}
 import com.journeymonitor.analyze.common.{CassandraClient, CassandraConnectionUri}
-import models.StatisticsModel
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment, Mode}
-import repositories.{Repository, StatisticsRepository}
-
 import scala.concurrent.Future
-
 
 trait CassandraRepositoryComponents {
   // These will be filled by Play's built-in components; should be `def` to avoid initialization problems
