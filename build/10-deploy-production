@@ -16,7 +16,14 @@ cd $2
 /usr/bin/sbt "project common" "test" || exit 1
 /usr/bin/sbt "project importer" "assembly" || exit 1 # This also runs all tests
 /usr/bin/sbt "project spark" "assembly" || exit 1 # This also runs all tests
-/usr/bin/sbt "project api" "test" "dist" || exit 1
+/usr/bin/sbt "project api" "test" "universal:packageZipTarball" || exit 1
 
 cp importer/target/scala-2.11/journeymonitor-analyze-importer-assembly.jar /opt/journeymonitor/analyze/
 cp spark/target/scala-2.11/journeymonitor-analyze-spark-assembly.jar /opt/journeymonitor/analyze/
+
+cp api/target/universal/api-1.0-SNAPSHOT.tgz /opt/journeymonitor/analyze/
+/bin/kill `cat /var/tmp/journeymonitor-analyze-api.pid`
+/bin/sleep 10
+cd /opt/journeymonitor/analyze/
+/bin/tar xvfz api-1.0-SNAPSHOT.tgz
+/bin/su -s /bin/bash -c ". /etc/journeymonitor/app-analyze-env.sh && /usr/bin/nohup /bin/bash /opt/journeymonitor/analyze/api-1.0-SNAPSHOT/bin/api >> /var/tmp/journeymonitor-analyze-api.log 2>&1 &" journeymonitor || exit 1
