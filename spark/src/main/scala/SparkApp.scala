@@ -1,4 +1,4 @@
-package com.journeymonitor.analyze.sparkapp
+package com.journeymonitor.analyze.spark
 
 import com.datastax.spark.connector._
 import org.apache.spark._

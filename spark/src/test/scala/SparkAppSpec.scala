@@ -1,4 +1,4 @@
-package com.journeymonitor.analyze.sparkapp
+package com.journeymonitor.analyze.spark
 
 import java.text.SimpleDateFormat
 
