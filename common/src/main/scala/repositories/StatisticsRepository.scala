@@ -5,6 +5,8 @@ import com.datastax.driver.core.querybuilder.QueryBuilder._
 import com.datastax.driver.core.{ResultSet, Row, Session}
 import com.journeymonitor.analyze.common.models.StatisticsModel
 
+import scala.util.Try
+
 trait StatisticsRepository {
   def getAllForTestcaseIdYoungerThanOrEqualTo(testcaseId: String, dateTime: java.util.Date): List[StatisticsModel]
 }
@@ -12,6 +14,13 @@ trait StatisticsRepository {
 class StatisticsCassandraRepository(session: Session)
   extends CassandraRepository[StatisticsModel, String](session, "statistics", "testcase_id")
   with StatisticsRepository {
+
+  private class ModelIterator(resultSet: ResultSet) {
+    def next(): Try[StatisticsModel] = {
+      Try(rowToModel(resultSet.one())) // Will fail if one() return null
+    }
+  }
+
   override def rowToModel(row: Row): StatisticsModel = {
     StatisticsModel(
       row.getString("testresult_id"),
@@ -22,7 +31,7 @@ class StatisticsCassandraRepository(session: Session)
       row.getInt("number_of_500"))
   }
 
-  def getAllForTestcaseIdYoungerThanOrEqualTo(testcaseId: String, dateTime: java.util.Date): Seq[StatisticsModel] = {
+  def getAllForTestcaseIdYoungerThanOrEqualTo(testcaseId: String, dateTime: java.util.Date): ModelIterator = {
     import scala.collection.JavaConversions._
     /* TODO:
         - is the dateTime from today? Then we only need to look in the current day_bucket
@@ -43,5 +52,6 @@ class StatisticsCassandraRepository(session: Session)
           .and(QueryBuilder.gte("testresult_datetime_run", dateTime))
       ).all().toList).flatten
     rows.map(row => rowToModel(row))
+    new ModelIterator()
   }
 }
