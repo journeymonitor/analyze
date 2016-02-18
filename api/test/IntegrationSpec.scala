@@ -18,18 +18,18 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
     session.execute(
       """
         |INSERT INTO statistics
-        | (testcase_id, testresult_id, datetime_run,               runtime_milliseconds, number_of_200, number_of_400, number_of_500)
+        | (testcase_id, day_bucket,   testresult_datetime_run,    testresult_id, runtime_milliseconds, number_of_200, number_of_400, number_of_500)
         | VALUES
-        | ('testcase1', 'testresult1', '2016-01-07 01:32:12+0000', 111,                  123,           456,           789);
+        | ('testcase1', '2016-01-07', '2016-01-07 01:32:12+0000', 'testresult1', 111, 123, 456, 789);
       """.stripMargin
     )
 
     session.execute(
       """
         |INSERT INTO statistics
-        | (testcase_id, testresult_id, datetime_run,               runtime_milliseconds, number_of_200, number_of_400, number_of_500)
+        | (testcase_id, day_bucket,   testresult_datetime_run,    testresult_id, runtime_milliseconds, number_of_200, number_of_400, number_of_500)
         | VALUES
-        | ('testcase1', 'testresult3', '2016-01-07 03:32:12+0000', 333,                  123,           456,           789);
+        | ('testcase1', '2016-01-07', '2016-01-07 01:32:12+0000', 'testresult3', 333, 123, 456, 789);
       """.stripMargin
     )
 
@@ -37,18 +37,18 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
     session.execute(
       """
         |INSERT INTO statistics
-        | (testcase_id, testresult_id, datetime_run,               runtime_milliseconds, number_of_200, number_of_400, number_of_500)
+        | (testcase_id, day_bucket,   testresult_datetime_run,    testresult_id, runtime_milliseconds, number_of_200, number_of_400, number_of_500)
         | VALUES
-        | ('testcase2', 'testresult3', '2016-01-07 04:32:12+0000', 333,                  123,           456,           789);
+        | ('testcase2', '2016-01-07', '2016-01-07 01:32:12+0000', 'testresult3', 333, 123, 456, 789);
       """.stripMargin
     )
 
     session.execute(
       """
         |INSERT INTO statistics
-        | (testcase_id, testresult_id, datetime_run,               runtime_milliseconds, number_of_200, number_of_400, number_of_500)
+        | (testcase_id, day_bucket,   testresult_datetime_run,    testresult_id, runtime_milliseconds, number_of_200, number_of_400, number_of_500)
         | VALUES
-        | ('testcase1', 'testresult2', '2016-01-07 02:32:12+0000', 222,                  122,           452,           782);
+        | ('testcase1', '2016-01-07', '2016-01-07 01:32:12+0000', 'testresult2', 222, 123, 456, 789);
       """.stripMargin
     )
   }

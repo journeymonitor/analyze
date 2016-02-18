@@ -21,7 +21,7 @@ class Statistics(statisticsRepository: Repository[StatisticsModel, String]) exte
   def show(testcaseId: String, n: Int) = Action {
     statisticsRepository.getNById(testcaseId, n) match {
       case Success(statistics: List[StatisticsModel]) => Ok(Json.toJson(statistics))
-      case Failure(ex) => InternalServerError(Json.toJson(Map("message" -> "An error occured")))
+      case Failure(ex) => InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + ex.getMessage))))
     }
   }
 

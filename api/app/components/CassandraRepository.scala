@@ -2,7 +2,7 @@ package components
 
 import com.datastax.driver.core.Session
 import com.journeymonitor.analyze.common.models.StatisticsModel
-import com.journeymonitor.analyze.common.repositories.{StatisticsRepository, Repository}
+import com.journeymonitor.analyze.common.repositories.{StatisticsCassandraRepository, StatisticsRepository, Repository}
 import com.journeymonitor.analyze.common.{CassandraClient, CassandraConnectionUri}
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment, Mode}
@@ -32,6 +32,6 @@ trait CassandraRepositoryComponents {
   }
 
   lazy val statisticsRepository: Repository[StatisticsModel, String] = {
-    new StatisticsRepository(cassandraSession)
+    new StatisticsCassandraRepository(cassandraSession)
   }
 }

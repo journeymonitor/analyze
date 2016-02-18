@@ -1,6 +1,6 @@
 import java.io.File
 import com.journeymonitor.analyze.common.models.StatisticsModel
-import com.journeymonitor.analyze.common.repositories.Repository
+import com.journeymonitor.analyze.common.repositories.{StatisticsRepository, Repository}
 import org.scalatestplus.play._
 import play.api
 import play.api.ApplicationLoader.Context
@@ -9,7 +9,7 @@ import play.api.test._
 import play.api.{ApplicationLoader, Environment, Mode}
 import scala.util.Try
 
-class MockStatisticsRepository extends Repository[StatisticsModel, String] {
+class MockStatisticsRepository extends Repository[StatisticsModel, String] with StatisticsRepository {
   override def getNById(id: String, n: Int): Try[List[StatisticsModel]] = {
     Try {
       id match {
@@ -20,6 +20,9 @@ class MockStatisticsRepository extends Repository[StatisticsModel, String] {
         )
       }
     }
+  }
+  def getAllForTestcaseIdYoungerThanOrEqualTo(testcaseId: String, dateTime: java.util.Date): List[StatisticsModel] = {
+    List()
   }
 }
 

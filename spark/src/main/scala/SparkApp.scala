@@ -60,8 +60,9 @@ case class Testresult(testcaseId: String,
                       har: JValue)
 
 case class Statistics(testcaseId: String,
+                      dayBucket: String,
+                      testresultDatetimeRun: java.util.Date,
                       testresultId: String,
-                      datetimeRun: java.util.Date,
                       totalRequestTime: Int,
                       numberOfRequestsWithStatus200: Int,
                       numberOfRequestsWithStatus400: Int,
@@ -92,10 +93,16 @@ object HarAnalyzer {
   def calculateRequestStatistics(testresultsRDD: RDD[Testresult]): RDD[Statistics] = {
     testresultsRDD.map(testresult => {
       val entries = (testresult.har \ "log" \ "entries").children
+      val cal = java.util.Calendar.getInstance()
+      cal.setTime(testresult.datetimeRun)
       Statistics(
         testcaseId = testresult.testcaseId,
+        dayBucket =
+                  cal.get(java.util.Calendar.YEAR)
+          + "-" + (cal.get(java.util.Calendar.MONTH) + 1) // Zero-based? Are you kidding me?
+          + "-" + cal.get(java.util.Calendar.DAY_OF_MONTH),
+        testresultDatetimeRun = testresult.datetimeRun,
         testresultId = testresult.testresultId,
-        datetimeRun = testresult.datetimeRun,
         totalRequestTime = calculateTotalRequestTime(entries),
         numberOfRequestsWithStatus200 = calculateNumberOfRequestsWithResponseStatus(200, entries),
         numberOfRequestsWithStatus400 = calculateNumberOfRequestsWithResponseStatus(400, entries),
@@ -141,13 +148,13 @@ object SparkApp {
       "analyze",
       "statistics",
       SomeColumns(
-        "testcase_id"          as "testcaseId",
-        "testresult_id"        as "testresultId",
-        "datetime_run"         as "datetimeRun",
-        "runtime_milliseconds" as "totalRequestTime",
-        "number_of_200"        as "numberOfRequestsWithStatus200",
-        "number_of_400"        as "numberOfRequestsWithStatus400",
-        "number_of_500"        as "numberOfRequestsWithStatus500"
+        "testcase_id"             as "testcaseId",
+        "testresult_id"           as "testresultId",
+        "testresult_datetime_run" as "testresultDatetimeRun",
+        "runtime_milliseconds"    as "totalRequestTime",
+        "number_of_200"           as "numberOfRequestsWithStatus200",
+        "number_of_400"           as "numberOfRequestsWithStatus400",
+        "number_of_500"           as "numberOfRequestsWithStatus500"
       )
     )
 

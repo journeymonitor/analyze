@@ -10,12 +10,13 @@ import org.scalatest.{BeforeAndAfter, FunSpec, Matchers}
 object FixtureGenerator {
   def getTestresultsRDD(sc: SparkContext) = {
     val format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    val datetimeRun = format.parse("2015-11-17 12:34:56")
+    val datetimeRun1 = format.parse("2015-11-17 23:59:59")
+    val datetimeRun2 = format.parse("2015-11-18 00:00:00")
     sc.parallelize(Seq(
       Testresult(
         testcaseId = "testcaseId1",
         testresultId = "testresultId1",
-        datetimeRun = datetimeRun,
+        datetimeRun = datetimeRun1,
         har = parse(
           """
             |{
@@ -41,7 +42,7 @@ object FixtureGenerator {
       Testresult(
         testcaseId = "testcaseId1",
         testresultId = "testresultId2",
-        datetimeRun = datetimeRun,
+        datetimeRun = datetimeRun2,
         har = parse(
           """
 {
@@ -97,17 +98,19 @@ class SparkExampleSpec extends FunSpec with BeforeAndAfter with Matchers {
       val statistics = statisticsRDD.collect()
 
       statistics(0).testcaseId should be("testcaseId1")
+      statistics(0).dayBucket should be("2015-11-17")
       statistics(0).testresultId should be("testresultId1")
-      statistics(0).datetimeRun.toString.substring(0, 20) should be("Tue Nov 17 12:34:56 ") // @TODO: Stupid hack because we do not yet store the timezone
-      statistics(0).datetimeRun.toString.substring(24) should be("2015")
+      statistics(0).testresultDatetimeRun.toString.substring(0, 20) should be("Tue Nov 17 23:59:59 ") // @TODO: Stupid hack because we do not yet store the timezone
+      statistics(0).testresultDatetimeRun.toString.substring(24) should be("2015")
       statistics(0).numberOfRequestsWithStatus200 should be(1)
       statistics(0).numberOfRequestsWithStatus400 should be(1)
       statistics(0).totalRequestTime should be(25)
 
       statistics(1).testcaseId should be("testcaseId1")
+      statistics(1).dayBucket should be("2015-11-18")
       statistics(1).testresultId should be("testresultId2")
-      statistics(1).datetimeRun.toString.substring(0, 20) should be("Tue Nov 17 12:34:56 ")
-      statistics(1).datetimeRun.toString.substring(24) should be("2015")
+      statistics(1).testresultDatetimeRun.toString.substring(0, 20) should be("Wed Nov 18 00:00:00 ")
+      statistics(1).testresultDatetimeRun.toString.substring(24) should be("2015")
       statistics(1).numberOfRequestsWithStatus200 should be(0)
       statistics(1).numberOfRequestsWithStatus400 should be(2)
       statistics(1).totalRequestTime should be(20)

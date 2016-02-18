@@ -8,11 +8,11 @@ import com.journeymonitor.analyze.common.models.Model
 import scala.collection.JavaConversions._
 import scala.util.Try
 
-abstract class CassandraRepository[M <: Model, I](session: Session, tablename: String, partitionKeyName: String)
+abstract class CassandraRepository[M <: Model, I](session: Session, val tablename: String, partitionKeyName: String)
   extends Repository[M, I] {
   def rowToModel(row: Row): M
 
-  def getNBySinglePartitionKeyValue(partitionKeyValue: I, n: Int, nthTry: Int): ResultSet = {
+  private def getNBySinglePartitionKeyValue(partitionKeyValue: I, n: Int, nthTry: Int): ResultSet = {
     val selectStmt =
       select()
         .from(tablename)
