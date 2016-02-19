@@ -12,6 +12,7 @@ class Statistics(statisticsRepository: Repository[StatisticsModel, String]) exte
 
   implicit val StatisticsWrites: Writes[StatisticsModel] = (
     (JsPath \ "testresultId").write[String] and
+    (JsPath \ "testresultDatetimeRun").write[java.util.Date] and
     (JsPath \ "runtimeMilliseconds").write[Int] and
     (JsPath \ "numberOf200").write[Int] and
     (JsPath \ "numberOf400").write[Int] and

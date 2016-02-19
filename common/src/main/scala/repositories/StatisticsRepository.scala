@@ -7,17 +7,27 @@ import com.journeymonitor.analyze.common.models.StatisticsModel
 
 import scala.util.Try
 
+trait ModelIterator {
+  def next(): Try[StatisticsModel]
+}
+
 trait StatisticsRepository {
-  def getAllForTestcaseIdYoungerThanOrEqualTo(testcaseId: String, dateTime: java.util.Date): List[StatisticsModel]
+  def getAllForTestcaseIdYoungerThanOrEqualTo(testcaseId: String, dateTime: java.util.Date): ModelIterator
 }
 
 class StatisticsCassandraRepository(session: Session)
   extends CassandraRepository[StatisticsModel, String](session, "statistics", "testcase_id")
   with StatisticsRepository {
 
-  private class ModelIterator(resultSet: ResultSet) {
+  class StatisticsModelIterator(resultSets: Seq[ResultSet]) extends ModelIterator {
     def next(): Try[StatisticsModel] = {
-      Try(rowToModel(resultSet.one())) // Will fail if one() return null
+      Try {
+        val resultSet = resultSets.find(!_.isExhausted)
+        resultSet match {
+          case Some(r: ResultSet) => rowToModel(r.one())
+          case None => throw new Exception("All ResultSets are exhausted")
+        }
+      }
     }
   }
 
@@ -43,15 +53,14 @@ class StatisticsCassandraRepository(session: Session)
          - From here on return all rows plus all rows from higher day_buckets, if any
      */
     val dayBuckets = Seq("2016-02-17", "2016-02-18")
-    val rows = (for (dayBucket <- dayBuckets)
+    val resultSets = (for (dayBucket <- dayBuckets)
       yield session.execute(
         select()
           .from(tablename)
           .where(QueryBuilder.eq("testcase_id", testcaseId))
           .and(QueryBuilder.eq("day_bucket", "2015-05-04"))
           .and(QueryBuilder.gte("testresult_datetime_run", dateTime))
-      ).all().toList).flatten
-    rows.map(row => rowToModel(row))
-    new ModelIterator()
+      ))
+    new StatisticsModelIterator(resultSets)
   }
 }
