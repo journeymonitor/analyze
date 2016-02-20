@@ -1,6 +1,7 @@
 import java.io.File
+import java.util.Date
 import com.journeymonitor.analyze.common.models.StatisticsModel
-import com.journeymonitor.analyze.common.repositories.{StatisticsRepository, Repository}
+import com.journeymonitor.analyze.common.repositories.{ModelIterator, StatisticsRepository, Repository}
 import org.scalatestplus.play._
 import play.api
 import play.api.ApplicationLoader.Context
@@ -10,19 +11,28 @@ import play.api.{ApplicationLoader, Environment, Mode}
 import scala.util.Try
 
 class MockStatisticsRepository extends Repository[StatisticsModel, String] with StatisticsRepository {
+
+  class MockModelIterator extends ModelIterator {
+    def next(): Try[StatisticsModel] = {
+      Try {
+        StatisticsModel("mocked", new Date(1456006032), 987, 123, 456, 789)
+      }
+    }
+  }
+
   override def getNById(id: String, n: Int): Try[List[StatisticsModel]] = {
     Try {
       id match {
         case "testcaseWithFailure" => throw new Exception("blubb")
         case "testcaseWithoutStatistics" => List.empty[StatisticsModel]
         case id => List(
-          StatisticsModel("mocked-" + id, 987, 123, 456, 789)
+          StatisticsModel("mocked-" + id, new Date(1456006032), 987, 123, 456, 789)
         )
       }
     }
   }
-  def getAllForTestcaseIdYoungerThanOrEqualTo(testcaseId: String, dateTime: java.util.Date): List[StatisticsModel] = {
-    List()
+  def getAllForTestcaseIdYoungerThanOrEqualTo(testcaseId: String, dateTime: java.util.Date): ModelIterator = {
+    new MockModelIterator()
   }
 }
 
