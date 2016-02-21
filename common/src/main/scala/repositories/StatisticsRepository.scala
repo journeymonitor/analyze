@@ -7,19 +7,24 @@ import com.journeymonitor.analyze.common.models.StatisticsModel
 
 import scala.util.Try
 
-trait ModelIterator {
-  def next(): Try[StatisticsModel]
+trait ModelIterator[T] {
+  def next(): Try[T]
 }
 
 trait StatisticsRepository {
-  def getAllForTestcaseIdYoungerThanOrEqualTo(testcaseId: String, dateTime: java.util.Date): ModelIterator
+  /** Returns a ModelIterator over all statistics entries since the given date and time
+    *
+    * The dateTime is inclusive, i.e., the iterator will return models for all rows where the
+    * value of the testresult_datetime_run column is identical to or younger than the given datetime.
+    */
+  def getAllForTestcaseIdSinceDateTime(testcaseId: String, dateTime: java.util.Date): ModelIterator
 }
 
 class StatisticsCassandraRepository(session: Session)
   extends CassandraRepository[StatisticsModel, String](session, "statistics", "testcase_id")
   with StatisticsRepository {
 
-  class StatisticsModelIterator(resultSets: Seq[ResultSet]) extends ModelIterator {
+  class StatisticsModelIterator(resultSets: Seq[ResultSet]) extends ModelIterator[StatisticsModel] {
     def next(): Try[StatisticsModel] = {
       Try {
         val resultSet = resultSets.find(!_.isExhausted)
@@ -41,7 +46,7 @@ class StatisticsCassandraRepository(session: Session)
       row.getInt("number_of_500"))
   }
 
-  def getAllForTestcaseIdYoungerThanOrEqualTo(testcaseId: String, dateTime: java.util.Date): ModelIterator = {
+  def getAllForTestcaseIdSinceDateTime(testcaseId: String, dateTime: java.util.Date): ModelIterator = {
     import scala.collection.JavaConversions._
     /* TODO:
         - is the dateTime from today? Then we only need to look in the current day_bucket

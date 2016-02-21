@@ -12,10 +12,10 @@ import scala.util.Try
 
 class MockStatisticsRepository extends Repository[StatisticsModel, String] with StatisticsRepository {
 
-  class MockModelIterator extends ModelIterator {
+  class MockModelIterator(testcaseId: String) extends ModelIterator {
     def next(): Try[StatisticsModel] = {
       Try {
-        StatisticsModel("mocked", new Date(1456006032), 987, 123, 456, 789)
+        StatisticsModel("mocked-" + testcaseId, new Date(1456006032), 987, 123, 456, 789)
       }
     }
   }
@@ -31,8 +31,9 @@ class MockStatisticsRepository extends Repository[StatisticsModel, String] with 
       }
     }
   }
-  def getAllForTestcaseIdYoungerThanOrEqualTo(testcaseId: String, dateTime: java.util.Date): ModelIterator = {
-    new MockModelIterator()
+
+  override def getAllForTestcaseIdSinceDateTime(testcaseId: String, dateTime: java.util.Date): ModelIterator = {
+    new MockModelIterator(testcaseId)
   }
 }
 
@@ -76,7 +77,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
     }
 
     "return a JSON array with the latest statistics entry for a given testcase id" in {
-      val Some(response) = route(FakeRequest(GET, "/testcases/testcase1/statistics/latest/?n=1"))
+      val Some(response) = route(FakeRequest(GET, "/testcases/testcase1/statistics/latest/?minTestresultDatetimeRun=2016-01-21+22%3A03%3A49%2B0000"))
 
       status(response) mustBe OK
       contentType(response) mustBe Some("application/json")
@@ -84,6 +85,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       contentAsString(response) mustBe
         """
           |[{"testresultId":"mocked-testcase1",
+          |"testresultDatetimeRun"
           |"runtimeMilliseconds":987,
           |"numberOf200":123,
           |"numberOf400":456,
@@ -92,7 +94,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
     }
 
     "return a JSON object with an error message if there is a problem with the repository" in {
-      val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithFailure/statistics/latest/?n=1"))
+      val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithFailure/statistics/latest/?minTestresultDatetimeRun=2016-01-21+22%3A03%3A49%2B0000"))
 
       status(response) mustBe INTERNAL_SERVER_ERROR
       contentType(response) mustBe Some("application/json")
@@ -101,7 +103,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
     }
 
     "return an empty JSON array if no statistics for a given testcase id exist" in {
-      val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithoutStatistics/statistics/latest/?n=1"))
+      val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithoutStatistics/statistics/latest/?minTestresultDatetimeRun=2016-01-21+22%3A03%3A49%2B0000"))
 
       status(response) mustBe OK
       contentType(response) mustBe Some("application/json")
