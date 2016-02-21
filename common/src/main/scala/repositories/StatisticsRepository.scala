@@ -17,7 +17,7 @@ trait StatisticsRepository {
     * The dateTime is inclusive, i.e., the iterator will return models for all rows where the
     * value of the testresult_datetime_run column is identical to or younger than the given datetime.
     */
-  def getAllForTestcaseIdSinceDateTime(testcaseId: String, dateTime: java.util.Date): ModelIterator
+  def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): ModelIterator
 }
 
 class StatisticsCassandraRepository(session: Session)
@@ -46,7 +46,7 @@ class StatisticsCassandraRepository(session: Session)
       row.getInt("number_of_500"))
   }
 
-  def getAllForTestcaseIdSinceDateTime(testcaseId: String, dateTime: java.util.Date): ModelIterator = {
+  def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): ModelIterator = {
     import scala.collection.JavaConversions._
     /* TODO:
         - is the dateTime from today? Then we only need to look in the current day_bucket
@@ -64,7 +64,7 @@ class StatisticsCassandraRepository(session: Session)
           .from(tablename)
           .where(QueryBuilder.eq("testcase_id", testcaseId))
           .and(QueryBuilder.eq("day_bucket", "2015-05-04"))
-          .and(QueryBuilder.gte("testresult_datetime_run", dateTime))
+          .and(QueryBuilder.gte("testresult_datetime_run", datetime))
       ))
     new StatisticsModelIterator(resultSets)
   }

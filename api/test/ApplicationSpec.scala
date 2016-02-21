@@ -32,7 +32,7 @@ class MockStatisticsRepository extends Repository[StatisticsModel, String] with 
     }
   }
 
-  override def getAllForTestcaseIdSinceDateTime(testcaseId: String, dateTime: java.util.Date): ModelIterator = {
+  override def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): ModelIterator = {
     new MockModelIterator(testcaseId)
   }
 }

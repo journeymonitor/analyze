@@ -23,7 +23,7 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
 
   def showLatest(testcaseId: String, minTestresultDatetimeRun: String) = Action {
     val sdf = new SimpleDateFormat("yyyy-MM-dd HH:ii:ss+0000")
-    statisticsRepository.getAllForTestcaseIdSinceDateTime(testcaseId, sdf.parse(minTestresultDatetimeRun)) match {
+    statisticsRepository.getAllForTestcaseIdSinceDatetime(testcaseId, sdf.parse(minTestresultDatetimeRun)) match {
       case Success(statisticsModelIterator: ModelIterator[StatisticsModel]) => {
         val statisticsModels = for (statisticsModel <- statisticsModelIterator.next()) // TODO: Streaming response
           yield statisticsModel
