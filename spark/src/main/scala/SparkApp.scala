@@ -122,7 +122,7 @@ object SparkApp {
     val rowsRDD = sc.cassandraTable("analyze", "testresults")
 
     // Create RDD with a tuple of Testcase ID, Testresult ID, DateTime of Run, HAR per entry
-    // Not calling .cache() because that result in OOM
+    // Not calling .cache() because that results in OOM
     // Note: this flatMap is where executors spend the most time (currently around 2s for ~330 rows (~42 MB))
     // The suspect here is the parse operation because our JSON is quite large and complex
     val testresultsRDD =
