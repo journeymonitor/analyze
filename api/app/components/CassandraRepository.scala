@@ -31,7 +31,7 @@ trait CassandraRepositoryComponents {
     session
   }
 
-  lazy val statisticsRepository: Repository[StatisticsModel, String] = {
+  lazy val statisticsRepository: StatisticsRepository = {
     new StatisticsCassandraRepository(cassandraSession)
   }
 }

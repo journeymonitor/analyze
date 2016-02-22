@@ -27,7 +27,7 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
       case Success(statisticsModelIterator: ModelIterator[StatisticsModel]) => {
         val statisticsModels = for (statisticsModel <- statisticsModelIterator.next()) // TODO: Streaming response
           yield statisticsModel
-        Ok(Json.toJson(statisticsModels))
+        Ok(Json.toJson(statisticsModels.get)) // Meh.
       }
       case Failure(ex) => InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + ex.getMessage))))
     }

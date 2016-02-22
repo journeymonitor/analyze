@@ -17,7 +17,7 @@ trait StatisticsRepository {
     * The dateTime is inclusive, i.e., the iterator will return models for all rows where the
     * value of the testresult_datetime_run column is identical to or younger than the given datetime.
     */
-  def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): ModelIterator
+  def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[ModelIterator[StatisticsModel]]
 }
 
 class StatisticsCassandraRepository(session: Session)
@@ -46,7 +46,7 @@ class StatisticsCassandraRepository(session: Session)
       row.getInt("number_of_500"))
   }
 
-  def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): ModelIterator = {
+  def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[ModelIterator[StatisticsModel]] = {
     import scala.collection.JavaConversions._
     /* TODO:
         - is the dateTime from today? Then we only need to look in the current day_bucket
@@ -57,15 +57,17 @@ class StatisticsCassandraRepository(session: Session)
            // returns from oldest to youngest
          - From here on return all rows plus all rows from higher day_buckets, if any
      */
-    val dayBuckets = Seq("2016-02-17", "2016-02-18")
-    val resultSets = (for (dayBucket <- dayBuckets)
-      yield session.execute(
-        select()
-          .from(tablename)
-          .where(QueryBuilder.eq("testcase_id", testcaseId))
-          .and(QueryBuilder.eq("day_bucket", "2015-05-04"))
-          .and(QueryBuilder.gte("testresult_datetime_run", datetime))
-      ))
-    new StatisticsModelIterator(resultSets)
+    Try {
+      val dayBuckets = Seq("2016-02-17", "2016-02-18")
+      val resultSets = (for (dayBucket <- dayBuckets)
+        yield session.execute(
+          select()
+            .from(tablename)
+            .where(QueryBuilder.eq("testcase_id", testcaseId))
+            .and(QueryBuilder.eq("day_bucket", dayBucket))
+            .and(QueryBuilder.gte("testresult_datetime_run", datetime))
+        ))
+      new StatisticsModelIterator(resultSets)
+    }
   }
 }
