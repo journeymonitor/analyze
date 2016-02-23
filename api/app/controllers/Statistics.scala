@@ -3,7 +3,7 @@ package controllers
 import java.text.SimpleDateFormat
 
 import com.journeymonitor.analyze.common.models.StatisticsModel
-import com.journeymonitor.analyze.common.repositories.{ModelIterator, StatisticsRepository}
+import com.journeymonitor.analyze.common.repositories.StatisticsRepository
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc._
@@ -24,10 +24,10 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
   def showLatest(testcaseId: String, minTestresultDatetimeRun: String) = Action {
     val sdf = new SimpleDateFormat("yyyy-MM-dd HH:ii:ss+0000")
     statisticsRepository.getAllForTestcaseIdSinceDatetime(testcaseId, sdf.parse(minTestresultDatetimeRun)) match {
-      case Success(statisticsModelIterator: ModelIterator[StatisticsModel]) => {
-        val statisticsModels = for (statisticsModel <- statisticsModelIterator.next()) // TODO: Streaming response
+      case Success(statisticsModelIterator: Iterator[StatisticsModel]) => {
+        val statisticsModels = for (statisticsModel <- statisticsModelIterator) // TODO: Streaming response
           yield statisticsModel
-        Ok(Json.toJson(statisticsModels.get)) // Meh.
+        Ok(Json.toJson(statisticsModels)) // Meh.
       }
       case Failure(ex) => InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + ex.getMessage))))
     }

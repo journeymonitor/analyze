@@ -12,12 +12,16 @@ import scala.util.Try
 
 class MockStatisticsRepository extends Repository[StatisticsModel, String] with StatisticsRepository {
 
-  class MockModelIterator(testcaseId: String) extends ModelIterator {
+  class MockModelIterator(testcaseId: String) extends Iterator[StatisticsModel] {
+    var calls = 0
     def next(): Try[StatisticsModel] = {
+      calls = calls + 1
       Try {
         StatisticsModel("mocked-" + testcaseId, new Date(1456006032), 987, 123, 456, 789)
       }
     }
+
+    def hasNext = calls < 1
   }
 
   override def getNById(id: String, n: Int): Try[List[StatisticsModel]] = {
@@ -32,7 +36,7 @@ class MockStatisticsRepository extends Repository[StatisticsModel, String] with 
     }
   }
 
-  override def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): ModelIterator = {
+  override def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Iterator[StatisticsModel] = {
     new MockModelIterator(testcaseId)
   }
 }
