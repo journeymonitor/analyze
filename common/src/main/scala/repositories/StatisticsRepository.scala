@@ -7,31 +7,32 @@ import com.journeymonitor.analyze.common.models.StatisticsModel
 
 import scala.util.Try
 
-trait ModelIterator[T] {
-  def next(): Try[T]
-}
-
 trait StatisticsRepository {
   /** Returns a ModelIterator over all statistics entries since the given date and time
     *
     * The dateTime is inclusive, i.e., the iterator will return models for all rows where the
     * value of the testresult_datetime_run column is identical to or younger than the given datetime.
     */
-  def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[ModelIterator[StatisticsModel]]
+  def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[Iterator[StatisticsModel]]
 }
 
 class StatisticsCassandraRepository(session: Session)
   extends CassandraRepository[StatisticsModel, String](session, "statistics", "testcase_id")
   with StatisticsRepository {
 
-  class StatisticsModelIterator(resultSets: Seq[ResultSet]) extends ModelIterator[StatisticsModel] {
-    def next(): Try[StatisticsModel] = {
-      Try {
-        val resultSet = resultSets.find(!_.isExhausted)
-        resultSet match {
-          case Some(r: ResultSet) => rowToModel(r.one())
-          case None => throw new Exception("All ResultSets are exhausted")
-        }
+  class StatisticsModelIterator(val resultSets: Seq[ResultSet]) extends Iterator[StatisticsModel] {
+    def next(): StatisticsModel = {
+      val resultSet = resultSets.find(!_.isExhausted)
+      resultSet match {
+        case Some(r: ResultSet) => rowToModel(r.one())
+        case None => throw new NoSuchElementException()
+      }
+    }
+
+    def hasNext: Boolean = {
+      resultSets.find(!_.isExhausted) match {
+        case Some(_) => true
+        case None => false
       }
     }
   }
@@ -46,7 +47,7 @@ class StatisticsCassandraRepository(session: Session)
       row.getInt("number_of_500"))
   }
 
-  def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[ModelIterator[StatisticsModel]] = {
+  def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[Iterator[StatisticsModel]] = {
     import scala.collection.JavaConversions._
     /* TODO:
         - is the dateTime from today? Then we only need to look in the current day_bucket
