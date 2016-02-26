@@ -1,7 +1,7 @@
 import java.io.File
 import java.util.Date
 import com.journeymonitor.analyze.common.models.StatisticsModel
-import com.journeymonitor.analyze.common.repositories.{ModelIterator, StatisticsRepository, Repository}
+import com.journeymonitor.analyze.common.repositories.{StatisticsRepository, Repository}
 import org.scalatestplus.play._
 import play.api
 import play.api.ApplicationLoader.Context
@@ -12,16 +12,22 @@ import scala.util.Try
 
 class MockStatisticsRepository extends Repository[StatisticsModel, String] with StatisticsRepository {
 
-  class MockModelIterator(testcaseId: String) extends Iterator[StatisticsModel] {
-    var calls = 0
-    def next(): Try[StatisticsModel] = {
-      calls = calls + 1
-      Try {
-        StatisticsModel("mocked-" + testcaseId, new Date(1456006032), 987, 123, 456, 789)
-      }
+  class MockEmptyModelIterator extends Iterator[StatisticsModel] {
+    def next(): StatisticsModel = {
+      throw new NoSuchElementException()
     }
 
-    def hasNext = calls < 1
+    def hasNext = false
+  }
+
+  class MockModelIterator(testcaseId: String) extends Iterator[StatisticsModel] {
+    var calls = 0
+    def next(): StatisticsModel = {
+      calls = calls + 1
+      StatisticsModel("mocked-" + testcaseId + "-" + calls, new Date(1456006032 + calls), 987, 123, 456, 789)
+    }
+
+    def hasNext = calls < 2
   }
 
   override def getNById(id: String, n: Int): Try[List[StatisticsModel]] = {
@@ -36,8 +42,17 @@ class MockStatisticsRepository extends Repository[StatisticsModel, String] with 
     }
   }
 
-  override def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Iterator[StatisticsModel] = {
-    new MockModelIterator(testcaseId)
+  override def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[Iterator[StatisticsModel]] = {
+    Try {
+      if (testcaseId == "testcaseWithFailure") {
+        throw new Exception("blubb")
+      }
+      if (testcaseId == "testcaseWithoutStatistics") {
+        new MockEmptyModelIterator()
+      } else {
+        new MockModelIterator(testcaseId)
+      }
+    }
   }
 }
 
@@ -86,14 +101,21 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       status(response) mustBe OK
       contentType(response) mustBe Some("application/json")
       charset(response) mustBe Some("utf-8")
+
       contentAsString(response) mustBe
         """
-          |[{"testresultId":"mocked-testcase1",
-          |"testresultDatetimeRun"
+          |{"testresultId":"mocked-testcase1-1",
+          |"testresultDatetimeRun":1456006033,
           |"runtimeMilliseconds":987,
           |"numberOf200":123,
           |"numberOf400":456,
-          |"numberOf500":789}]
+          |"numberOf500":789}
+          |{"testresultId":"mocked-testcase1-2",
+          |"testresultDatetimeRun":1456006034,
+          |"runtimeMilliseconds":987,
+          |"numberOf200":123,
+          |"numberOf400":456,
+          |"numberOf500":789}
           |""".stripMargin.replace("\n", "")
     }
 
@@ -103,7 +125,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       status(response) mustBe INTERNAL_SERVER_ERROR
       contentType(response) mustBe Some("application/json")
       charset(response) mustBe Some("utf-8")
-      contentAsString(response) mustBe """{"message":"An error occured"}"""
+      contentAsString(response) mustBe """{"message":"An error occured: blubb"}"""
     }
 
     "return an empty JSON array if no statistics for a given testcase id exist" in {
@@ -112,7 +134,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       status(response) mustBe OK
       contentType(response) mustBe Some("application/json")
       charset(response) mustBe Some("utf-8")
-      contentAsString(response) mustBe "[]"
+      contentAsString(response) mustBe ""
     }
   }
 
