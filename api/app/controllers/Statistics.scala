@@ -24,14 +24,26 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
   )(unlift(StatisticsModel.unapply))
 
   def showLatest(testcaseId: String, minTestresultDatetimeRun: String) = Action {
-    val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss+0000")
+    val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ")
+
     statisticsRepository.getAllForTestcaseIdSinceDatetime(testcaseId, sdf.parse(minTestresultDatetimeRun)) match {
       case Success(statisticsModelIterator: Iterator[StatisticsModel]) => {
-        val asJsonIterator = for (statisticsModel <- statisticsModelIterator)
-          yield (Json.toJson(statisticsModel))
+        val modelsAsStringsIterator = for (statisticsModel <- statisticsModelIterator)
+          yield (Json.toJson(statisticsModel).toString + { if (statisticsModelIterator.hasNext) "," else "" })
 
-        val e = Enumerator.enumerate(asJsonIterator)
-        Ok.chunked(e) // Meh.
+        val enumeratedModels = Enumerator.enumerate(modelsAsStringsIterator)
+        val begin = Enumerator.enumerate(List("["))
+        val end = Enumerator.enumerate(List("]"))
+
+        Ok.chunked(
+          begin andThen(
+            enumeratedModels andThen(
+              end andThen(
+                Enumerator.eof
+              )
+            )
+          )
+        ).as("application/json; charset=utf-8")
       }
       case Failure(ex) => InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + ex.getMessage))))
     }

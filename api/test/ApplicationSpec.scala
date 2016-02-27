@@ -91,12 +91,13 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       val Some(home) = route(FakeRequest(GET, "/"))
 
       status(home) mustBe OK
+
       contentType(home) mustBe Some("text/html")
       contentAsString(home) must include ("Your new application is ready.")
     }
 
     "return a JSON array with the latest statistics entry for a given testcase id" in {
-      val Some(response) = route(FakeRequest(GET, "/testcases/testcase1/statistics/latest/?minTestresultDatetimeRun=2016-01-21+22%3A03%3A49%2B0000"))
+      val Some(response) = route(FakeRequest(GET, "/testcases/testcase1/statistics/latest/"))
 
       status(response) mustBe OK
       contentType(response) mustBe Some("application/json")
@@ -104,23 +105,25 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
 
       contentAsString(response) mustBe
         """
+          |[
           |{"testresultId":"mocked-testcase1-1",
           |"testresultDatetimeRun":1456006033,
           |"runtimeMilliseconds":987,
           |"numberOf200":123,
           |"numberOf400":456,
-          |"numberOf500":789}
+          |"numberOf500":789},
           |{"testresultId":"mocked-testcase1-2",
           |"testresultDatetimeRun":1456006034,
           |"runtimeMilliseconds":987,
           |"numberOf200":123,
           |"numberOf400":456,
           |"numberOf500":789}
+          |]
           |""".stripMargin.replace("\n", "")
     }
 
     "return a JSON object with an error message if there is a problem with the repository" in {
-      val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithFailure/statistics/latest/?minTestresultDatetimeRun=2016-01-21+22%3A03%3A49%2B0000"))
+      val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithFailure/statistics/latest/"))
 
       status(response) mustBe INTERNAL_SERVER_ERROR
       contentType(response) mustBe Some("application/json")
@@ -129,12 +132,12 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
     }
 
     "return an empty JSON array if no statistics for a given testcase id exist" in {
-      val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithoutStatistics/statistics/latest/?minTestresultDatetimeRun=2016-01-21+22%3A03%3A49%2B0000"))
+      val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithoutStatistics/statistics/latest/"))
 
       status(response) mustBe OK
       contentType(response) mustBe Some("application/json")
       charset(response) mustBe Some("utf-8")
-      contentAsString(response) mustBe ""
+      contentAsString(response) mustBe "[]"
     }
   }
 
