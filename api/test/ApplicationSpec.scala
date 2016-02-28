@@ -33,7 +33,7 @@ class MockStatisticsRepository extends Repository[StatisticsModel, String] with 
   override def getNById(id: String, n: Int): Try[List[StatisticsModel]] = {
     Try {
       id match {
-        case "testcaseWithFailure" => throw new Exception("blubb")
+        case "testcaseWithFailure" => throw new Exception("Error in mock")
         case "testcaseWithoutStatistics" => List.empty[StatisticsModel]
         case id => List(
           StatisticsModel("mocked-" + id, new Date(1456006032), 987, 123, 456, 789)
@@ -45,7 +45,7 @@ class MockStatisticsRepository extends Repository[StatisticsModel, String] with 
   override def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[Iterator[StatisticsModel]] = {
     Try {
       if (testcaseId == "testcaseWithFailure") {
-        throw new Exception("blubb")
+        throw new Exception("Error in mock")
       }
       if (testcaseId == "testcaseWithoutStatistics") {
         new MockEmptyModelIterator()
@@ -128,7 +128,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       status(response) mustBe INTERNAL_SERVER_ERROR
       contentType(response) mustBe Some("application/json")
       charset(response) mustBe Some("utf-8")
-      contentAsString(response) mustBe """{"message":"An error occured: blubb"}"""
+      contentAsString(response) mustBe """{"message":"An error occured: Error in mock"}"""
     }
 
     "return an empty JSON array if no statistics for a given testcase id exist" in {
