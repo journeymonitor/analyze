@@ -1,10 +1,14 @@
 package com.journeymonitor.analyze.common.repositories
 
+import java.text.SimpleDateFormat
+import java.util.Calendar
+
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder._
 import com.datastax.driver.core.{ResultSet, Row, Session}
 import com.journeymonitor.analyze.common.models.StatisticsModel
 
+import scala.collection._
 import scala.util.Try
 
 trait StatisticsRepository {
@@ -47,27 +51,44 @@ class StatisticsCassandraRepository(session: Session)
       row.getInt("number_of_500"))
   }
 
+  private def getDayBuckets(datetime: java.util.Date): Seq[String] = {
+
+    def asString(calendar: Calendar) = {
+      val sdf = new SimpleDateFormat("yyyy-MM-dd");
+      sdf.format(calendar.getTime)
+    }
+
+    val current = Calendar.getInstance()
+    current.setTime(datetime)
+
+    val today = Calendar.getInstance()
+
+    if (current.after(today)) {
+      Seq(asString(today))
+    }
+
+    val l = mutable.MutableList.empty[String]
+    l += asString(current)
+
+    while (asString(current) != asString(today)) {
+      current.add(Calendar.DATE, 1)
+      l += asString(current)
+    }
+
+    l.toSeq.reverse
+  }
+
   def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[Iterator[StatisticsModel]] = {
-    import scala.collection.JavaConversions._
-    /* TODO:
-        - is the dateTime from today? Then we only need to look in the current day_bucket
-        - is the dateTime from a day earlier than today? Then we need to start at the matching
-          day_bucket and work our way up
-        - For each day_bucket y:
-         - SELECT * FROM statistics WHERE testcase_id = x and day_bucket = y and testresult_datetime_run >= dateTime
-           // returns from oldest to youngest
-         - From here on return all rows plus all rows from higher day_buckets, if any
-     */
     Try {
-      val dayBuckets = Seq("2016-02-17", "2016-02-18")
-      val resultSets = (for (dayBucket <- dayBuckets)
+      val dayBuckets = getDayBuckets(datetime)
+      val resultSets = for (dayBucket <- dayBuckets)
         yield session.execute(
           select()
             .from(tablename)
             .where(QueryBuilder.eq("testcase_id", testcaseId))
-            .and(QueryBuilder.eq("day_bucket", dayBucket))
-            .and(QueryBuilder.gte("testresult_datetime_run", datetime))
-        ))
+              .and(QueryBuilder.eq("day_bucket", dayBucket))
+              .and(QueryBuilder.gte("testresult_datetime_run", datetime))
+        )
       new StatisticsModelIterator(resultSets)
     }
   }

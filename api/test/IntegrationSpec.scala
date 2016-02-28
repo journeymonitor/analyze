@@ -20,7 +20,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
         |INSERT INTO statistics
         | (testcase_id, day_bucket,   testresult_datetime_run,    testresult_id, runtime_milliseconds, number_of_200, number_of_400, number_of_500)
         | VALUES
-        | ('testcase1', '2016-01-07', '2016-01-07 01:32:12+0000', 'testresult1', 111, 123, 456, 789);
+        | ('testcase1', '2016-01-01', '2016-01-01 01:32:12+0000', 'testresult1a', 111, 123, 456, 789);
       """.stripMargin
     )
 
@@ -29,7 +29,25 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
         |INSERT INTO statistics
         | (testcase_id, day_bucket,   testresult_datetime_run,    testresult_id, runtime_milliseconds, number_of_200, number_of_400, number_of_500)
         | VALUES
-        | ('testcase1', '2016-01-07', '2016-01-07 01:32:12+0000', 'testresult3', 333, 123, 456, 789);
+        | ('testcase1', '2016-01-01', '2016-01-01 02:32:12+0000', 'testresult1b', 111, 123, 456, 789);
+      """.stripMargin
+    )
+
+    session.execute(
+      """
+        |INSERT INTO statistics
+        | (testcase_id, day_bucket,   testresult_datetime_run,    testresult_id, runtime_milliseconds, number_of_200, number_of_400, number_of_500)
+        | VALUES
+        | ('testcase1', '2016-01-02', '2016-01-02 01:32:12+0000', 'testresult2', 222, 123, 456, 789);
+      """.stripMargin
+    )
+
+    session.execute(
+      """
+        |INSERT INTO statistics
+        | (testcase_id, day_bucket,   testresult_datetime_run,    testresult_id, runtime_milliseconds, number_of_200, number_of_400, number_of_500)
+        | VALUES
+        | ('testcase1', '2016-01-03', '2016-01-03 01:32:12+0000', 'testresult3', 333, 123, 456, 789);
       """.stripMargin
     )
 
@@ -39,16 +57,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
         |INSERT INTO statistics
         | (testcase_id, day_bucket,   testresult_datetime_run,    testresult_id, runtime_milliseconds, number_of_200, number_of_400, number_of_500)
         | VALUES
-        | ('testcase2', '2016-01-07', '2016-01-07 01:32:12+0000', 'testresult3', 333, 123, 456, 789);
-      """.stripMargin
-    )
-
-    session.execute(
-      """
-        |INSERT INTO statistics
-        | (testcase_id, day_bucket,   testresult_datetime_run,    testresult_id, runtime_milliseconds, number_of_200, number_of_400, number_of_500)
-        | VALUES
-        | ('testcase1', '2016-01-07', '2016-01-07 01:32:12+0000', 'testresult2', 222, 123, 456, 789);
+        | ('testcase2', '2016-01-01', '2016-01-01 01:32:12+0000', 'testresult3', 333, 123, 456, 789);
       """.stripMargin
     )
   }
@@ -68,29 +77,14 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
       pageSource must include ("Your new application is ready.")
     }
 
-    "return a JSON array with the latest statistics entry for a given testcase id" in {
-      go to "http://localhost:" + port + "/testcases/testcase1/statistics/latest/?n=1"
+    "return a JSON array with all statistics entries for a given testcase id without limitation" in {
+      go to "http://localhost:" + port + "/testcases/testcase1/statistics/latest/"
       pageSource mustBe
         """
           |[
           |  {
           |    "testresultId":"testresult3",
-          |    "runtimeMilliseconds":333,
-          |    "numberOf200":123,
-          |    "numberOf400":456,
-          |    "numberOf500":789
-          |  }
-          |]
-          |""".stripMargin.replace("\n", "").replace(" ", "")
-    }
-
-    "return a JSON array with the latest N statistics entries for a given testcase id" in {
-      go to "http://localhost:" + port + "/testcases/testcase1/statistics/latest/?n=2"
-      pageSource mustBe
-        """
-          |[
-          |  {
-          |    "testresultId":"testresult3",
+          |    "testresultDatetimeRun":1451784732000,
           |    "runtimeMilliseconds":333,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -98,17 +92,34 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult2",
+          |    "testresultDatetimeRun":1451698332000,
           |    "runtimeMilliseconds":222,
-          |    "numberOf200":122,
-          |    "numberOf400":452,
-          |    "numberOf500":782
+          |    "numberOf200":123,
+          |    "numberOf400":456,
+          |    "numberOf500":789
+          |  },
+          |  {
+          |    "testresultId":"testresult1b",
+          |    "testresultDatetimeRun":1451615532000,
+          |    "runtimeMilliseconds":111,
+          |    "numberOf200":123,
+          |    "numberOf400":456,
+          |    "numberOf500":789
+          |  },
+          |  {
+          |    "testresultId":"testresult1a",
+          |    "testresultDatetimeRun":1451611932000,
+          |    "runtimeMilliseconds":111,
+          |    "numberOf200":123,
+          |    "numberOf400":456,
+          |    "numberOf500":789
           |  }
           |]
           |""".stripMargin.replace("\n", "").replace(" ", "")
     }
 
-    "return an empty JSON array if no statistics exist for a given testcase id" in {
-      go to "http://localhost:" + port + "/testcases/testcaseFoo/statistics/latest/?n=2"
+    "return an empty JSON array for a given testcase id where no testcase exists" in {
+      go to "http://localhost:" + port + "/testcases/thisTestcaseDoesNotExist/statistics/latest/"
       pageSource mustBe "[]"
     }
 
