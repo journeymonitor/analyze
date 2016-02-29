@@ -10,7 +10,7 @@ import play.api.libs.json._
 import play.api.mvc._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import scala.util.{Success,Failure}
+import scala.util.{Try, Success, Failure}
 
 class Statistics(statisticsRepository: StatisticsRepository) extends Controller {
 
@@ -31,26 +31,36 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
     // Therefore, we need to decide on a maximum range (say, 100 days ago) for this
     // case, probably even returning a 400 or 500 error.
 
-    statisticsRepository.getAllForTestcaseIdSinceDatetime(testcaseId, sdf.parse(minTestresultDatetimeRun)) match {
-      case Success(statisticsModelIterator: Iterator[StatisticsModel]) => {
-        val modelsAsStringsIterator = for (statisticsModel <- statisticsModelIterator)
-          yield (Json.toJson(statisticsModel).toString + { if (statisticsModelIterator.hasNext) "," else "" })
+    Try {
+      sdf.parse(minTestresultDatetimeRun)
+    } match {
+      case Success(datetime) =>
+        statisticsRepository.getAllForTestcaseIdSinceDatetime(testcaseId, datetime) match {
+          case Success(statisticsModelIterator: Iterator[StatisticsModel]) => {
+            val modelsAsStringsIterator = for (statisticsModel <- statisticsModelIterator)
+              yield (Json.toJson(statisticsModel).toString + { if (statisticsModelIterator.hasNext) "," else "" })
 
-        val enumeratedModels = Enumerator.enumerate(modelsAsStringsIterator)
-        val begin = Enumerator.enumerate(List("["))
-        val end = Enumerator.enumerate(List("]"))
+            val enumeratedModels = Enumerator.enumerate(modelsAsStringsIterator)
+            val begin = Enumerator.enumerate(List("["))
+            val end = Enumerator.enumerate(List("]"))
 
-        Ok.chunked(
-          begin andThen(
-            enumeratedModels andThen(
-              end andThen(
-                Enumerator.eof
-              )
-            )
-          )
-        ).as("application/json; charset=utf-8")
+            Ok.chunked(
+              begin andThen(
+                enumeratedModels andThen(
+                  end andThen(
+                    Enumerator.eof
+                    )
+                  )
+                )
+            ).as("application/json; charset=utf-8")
+          }
+          case Failure(ex) => InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + ex.getMessage))))
+        }
+      case Failure(ex) => ex match {
+        case e: java.text.ParseException =>
+          BadRequest(Json.toJson(Map("message" -> ("Invalid minTestresultDatetimeRun format, use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)"))))
+        case e => InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + e.getMessage))))
       }
-      case Failure(ex) => InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + ex.getMessage))))
     }
   }
 

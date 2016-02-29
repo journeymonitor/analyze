@@ -139,6 +139,24 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       charset(response) mustBe Some("utf-8")
       contentAsString(response) mustBe "[]"
     }
+
+    "return a JSON object with an error message if the minTestresultDatetimeRun string is incorrectly formatted" in {
+      val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithFailure/statistics/latest/?minTestresultDatetimeRun=foo"))
+
+      status(response) mustBe BAD_REQUEST
+      contentType(response) mustBe Some("application/json")
+      charset(response) mustBe Some("utf-8")
+      contentAsString(response) mustBe """{"message":"Invalid minTestresultDatetimeRun format, use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)"}"""
+    }
+
+    "return a JSON object with an error message if the minTestresultDatetimeRun string is empty" in {
+      val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithFailure/statistics/latest/?minTestresultDatetimeRun="))
+
+      status(response) mustBe BAD_REQUEST
+      contentType(response) mustBe Some("application/json")
+      charset(response) mustBe Some("utf-8")
+      contentAsString(response) mustBe """{"message":"Invalid minTestresultDatetimeRun format, use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)"}"""
+    }
   }
 
 }
