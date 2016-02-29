@@ -27,9 +27,9 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
     val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ")
 
     // TODO: If no datetime is given, or a datetime from really long ago(tm), then
-    // we are going to issue a lot of queries (one for each day).
+    // we are going to issue a lot of (unneeded) queries (one for each day).
     // Therefore, we need to decide on a maximum range (say, 100 days ago) for this
-    // case, probably even returning a 400 or 500 error
+    // case, probably even returning a 400 or 500 error.
 
     statisticsRepository.getAllForTestcaseIdSinceDatetime(testcaseId, sdf.parse(minTestresultDatetimeRun)) match {
       case Success(statisticsModelIterator: Iterator[StatisticsModel]) => {
