@@ -192,6 +192,11 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |""".stripMargin.replace("\n", "").replace(" ", "")
     }
 
+    "return an empty JSON array when limited to a datetime for which only older entries exist" in {
+      go to "http://localhost:" + port + "/testcases/testcase1/statistics/latest/?minTestresultDatetimeRun=2016-01-03+01%3A32%3A13%2B0000"
+      pageSource mustBe "[]"
+    }
+
     "return an empty JSON array for a given testcase id where no testcase exists" in {
       go to "http://localhost:" + port + "/testcases/thisTestcaseDoesNotExist/statistics/latest/"
       pageSource mustBe "[]"
