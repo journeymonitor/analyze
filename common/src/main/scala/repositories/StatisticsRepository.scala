@@ -7,6 +7,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder._
 import com.datastax.driver.core.{ResultSet, Row, Session}
 import com.journeymonitor.analyze.common.models.StatisticsModel
+import com.journeymonitor.analyze.common.util.Util
 
 import scala.collection._
 import scala.util.Try
@@ -51,36 +52,9 @@ class StatisticsCassandraRepository(session: Session)
       row.getInt("number_of_500"))
   }
 
-  private def getDayBuckets(datetime: java.util.Date): Seq[String] = {
-
-    def asString(calendar: Calendar) = {
-      val sdf = new SimpleDateFormat("yyyy-MM-dd");
-      sdf.format(calendar.getTime)
-    }
-
-    val current = Calendar.getInstance()
-    current.setTime(datetime)
-
-    val today = Calendar.getInstance()
-
-    if (current.after(today)) {
-      Seq(asString(today))
-    }
-
-    val l = mutable.MutableList.empty[String]
-    l += asString(current)
-
-    while (asString(current) != asString(today)) {
-      current.add(Calendar.DATE, 1)
-      l += asString(current)
-    }
-
-    l.toSeq.reverse
-  }
-
   def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[Iterator[StatisticsModel]] = {
     Try {
-      val dayBuckets = getDayBuckets(datetime)
+      val dayBuckets = Util.getDayBuckets(datetime)
       val resultSets = for (dayBucket <- dayBuckets)
         yield session.execute(
           select()
