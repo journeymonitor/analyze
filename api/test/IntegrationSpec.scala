@@ -77,7 +77,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
       pageSource must include ("Your new application is ready.")
     }
 
-    "return a JSON array with all statistics entries for a given testcase id without limitation" in {
+    "return a JSON array with all statistics entries for a given testcase id when not limited" in {
       go to "http://localhost:" + port + "/testcases/testcase1/statistics/latest/"
       pageSource mustBe
         """
@@ -109,6 +109,80 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  {
           |    "testresultId":"testresult1a",
           |    "testresultDatetimeRun":1451611932000,
+          |    "runtimeMilliseconds":111,
+          |    "numberOf200":123,
+          |    "numberOf400":456,
+          |    "numberOf500":789
+          |  }
+          |]
+          |""".stripMargin.replace("\n", "").replace(" ", "")
+    }
+
+    "return a JSON array with all statistics entries for a given testcase id when limited to the datetime of the earliest row" in {
+      go to "http://localhost:" + port + "/testcases/testcase1/statistics/latest/?minTestresultDatetimeRun=2016-01-01+01%3A32%3A12%2B0000"
+      pageSource mustBe
+        """
+          |[
+          |  {
+          |    "testresultId":"testresult3",
+          |    "testresultDatetimeRun":1451784732000,
+          |    "runtimeMilliseconds":333,
+          |    "numberOf200":123,
+          |    "numberOf400":456,
+          |    "numberOf500":789
+          |  },
+          |  {
+          |    "testresultId":"testresult2",
+          |    "testresultDatetimeRun":1451698332000,
+          |    "runtimeMilliseconds":222,
+          |    "numberOf200":123,
+          |    "numberOf400":456,
+          |    "numberOf500":789
+          |  },
+          |  {
+          |    "testresultId":"testresult1b",
+          |    "testresultDatetimeRun":1451615532000,
+          |    "runtimeMilliseconds":111,
+          |    "numberOf200":123,
+          |    "numberOf400":456,
+          |    "numberOf500":789
+          |  },
+          |  {
+          |    "testresultId":"testresult1a",
+          |    "testresultDatetimeRun":1451611932000,
+          |    "runtimeMilliseconds":111,
+          |    "numberOf200":123,
+          |    "numberOf400":456,
+          |    "numberOf500":789
+          |  }
+          |]
+          |""".stripMargin.replace("\n", "").replace(" ", "")
+    }
+
+    "return a JSON array with all but the earliest statistics entries for a given testcase id when limited to the datetime of the earliest row plus 1 second" in {
+      go to "http://localhost:" + port + "/testcases/testcase1/statistics/latest/?minTestresultDatetimeRun=2016-01-01+01%3A32%3A13%2B0000"
+      pageSource mustBe
+        """
+          |[
+          |  {
+          |    "testresultId":"testresult3",
+          |    "testresultDatetimeRun":1451784732000,
+          |    "runtimeMilliseconds":333,
+          |    "numberOf200":123,
+          |    "numberOf400":456,
+          |    "numberOf500":789
+          |  },
+          |  {
+          |    "testresultId":"testresult2",
+          |    "testresultDatetimeRun":1451698332000,
+          |    "runtimeMilliseconds":222,
+          |    "numberOf200":123,
+          |    "numberOf400":456,
+          |    "numberOf500":789
+          |  },
+          |  {
+          |    "testresultId":"testresult1b",
+          |    "testresultDatetimeRun":1451615532000,
           |    "runtimeMilliseconds":111,
           |    "numberOf200":123,
           |    "numberOf400":456,
