@@ -14,14 +14,7 @@ import scala.util.{Try, Success, Failure}
 
 class Statistics(statisticsRepository: StatisticsRepository) extends Controller {
 
-  implicit val StatisticsWrites: Writes[StatisticsModel] = (
-    (JsPath \ "testresultId").write[String] and
-    (JsPath \ "testresultDatetimeRun").write[java.util.Date] and
-    (JsPath \ "runtimeMilliseconds").write[Int] and
-    (JsPath \ "numberOf200").write[Int] and
-    (JsPath \ "numberOf400").write[Int] and
-    (JsPath \ "numberOf500").write[Int]
-  )(unlift(StatisticsModel.unapply))
+  implicit val StatisticsWrites = Json.writes[StatisticsModel]
 
   def showLatest(testcaseId: String, minTestresultDatetimeRun: String) = Action {
     val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ")
