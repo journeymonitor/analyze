@@ -35,10 +35,7 @@ class StatisticsCassandraRepository(session: Session)
     }
 
     def hasNext: Boolean = {
-      resultSets.find(!_.isExhausted) match {
-        case Some(_) => true
-        case None => false
-      }
+      resultSets.exists(!_.isExhausted)
     }
   }
 
@@ -55,14 +52,23 @@ class StatisticsCassandraRepository(session: Session)
   def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[Iterator[StatisticsModel]] = {
     Try {
       val dayBuckets = Util.getDayBuckets(datetime)
-      val resultSets = for (dayBucket <- dayBuckets)
-        yield session.execute(
+      val resultSetFutures = for (dayBucket <- dayBuckets)
+        yield session.executeAsync(
           select()
             .from(tablename)
             .where(QueryBuilder.eq("testcase_id", testcaseId))
               .and(QueryBuilder.eq("day_bucket", dayBucket))
               .and(QueryBuilder.gte("testresult_datetime_run", datetime))
         )
+      val resultSets = resultSetFutures.map(_.get())
+
+      /*
+      Executing asynchronously and then immediately resolving all futures via get()
+      may look counter-intuitive, but results in a running-time optimization nonetheless.
+      We don't need to wait for a query to finish before starting the next, we can fire them
+      all in parallel, which results in a much lower total run time for all queries.
+       */
+
       new StatisticsModelIterator(resultSets)
     }
   }
