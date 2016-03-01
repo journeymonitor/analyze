@@ -30,8 +30,8 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
       case Success(datetime) =>
         statisticsRepository.getAllForTestcaseIdSinceDatetime(testcaseId, datetime) match {
           case Success(statisticsModelIterator: Iterator[StatisticsModel]) => {
-            val modelsAsStringsIterator = for (statisticsModel <- statisticsModelIterator)
-              yield (Json.toJson(statisticsModel).toString + { if (statisticsModelIterator.hasNext) "," else "" })
+            val modelsAsStringsIterator: Iterator[String] = for (statisticsModel <- statisticsModelIterator)
+              yield Json.toJson(statisticsModel).toString + { if (statisticsModelIterator.hasNext) "," else "" }
 
             val enumeratedModels = Enumerator.enumerate(modelsAsStringsIterator)
             val begin = Enumerator.enumerate(List("["))
