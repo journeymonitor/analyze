@@ -6,28 +6,32 @@ import java.util.Calendar
 import scala.collection.{mutable, Seq}
 
 object Util {
+  def fullDatetimeWithRfc822Tz(calendar: Calendar): String = {
+    var sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ")
+    sdf.format(calendar.getTime)
+  }
+
+  def yMd(calendar: Calendar): String = {
+    val sdf = new SimpleDateFormat("yyyy-MM-dd");
+    sdf.format(calendar.getTime)
+  }
+
   def getDayBuckets(datetime: java.util.Date): Seq[String] = {
-
-    def asString(calendar: Calendar) = {
-      val sdf = new SimpleDateFormat("yyyy-MM-dd");
-      sdf.format(calendar.getTime)
-    }
-
     val current = Calendar.getInstance()
     current.setTime(datetime)
 
     val today = Calendar.getInstance()
 
     if (current.after(today)) {
-      Seq(asString(today))
+      Seq(yMd(today))
     }
 
     val l = mutable.MutableList.empty[String]
-    l += asString(current)
+    l += yMd(current)
 
-    while (asString(current) != asString(today)) {
+    while (yMd(current) != yMd(today)) {
       current.add(Calendar.DATE, 1)
-      l += asString(current)
+      l += yMd(current)
     }
 
     l.toSeq.reverse

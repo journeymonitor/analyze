@@ -3,9 +3,10 @@ package com.journeymonitor.analyze.common.repositories
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
+import com.datastax.driver.core.exceptions.{NoHostAvailableException, ReadTimeoutException}
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder._
-import com.datastax.driver.core.{ResultSet, Row, Session}
+import com.datastax.driver.core.{ResultSetFuture, ResultSet, Row, Session}
 import com.journeymonitor.analyze.common.models.StatisticsModel
 import com.journeymonitor.analyze.common.util.Util
 
@@ -49,18 +50,44 @@ class StatisticsCassandraRepository(session: Session)
       row.getInt("number_of_500"))
   }
 
+  // Based on http://stackoverflow.com/a/7931459/715256
+  private def retry[T](numberOfTries: Int, originalNumberOfTries: Option[Int] = None)(fn: (Int) => T): T = {
+    val actualOriginalNumberOfTries = originalNumberOfTries.getOrElse(numberOfTries)
+    try {
+      fn((actualOriginalNumberOfTries - numberOfTries) + 1)
+    } catch {
+      case ex: java.util.concurrent.ExecutionException => {
+        ex.getCause match {
+          case e @ (_ : ReadTimeoutException | _: NoHostAvailableException) => {
+            if (numberOfTries > 1) retry(numberOfTries - 1, Some(actualOriginalNumberOfTries))(fn)
+            else throw e
+          }
+        }
+      }
+    }
+  }
+
+  private def getAllForTestcaseIdAndDayBucketSinceDatetime(testcaseId: String, dayBucket: String, datetime: java.util.Date, nthTry: Int): ResultSetFuture = {
+    session.executeAsync(
+      select()
+        .from(tablename)
+        .where(QueryBuilder.eq("testcase_id", testcaseId))
+        .and(QueryBuilder.eq("day_bucket", dayBucket))
+        .and(QueryBuilder.gte("testresult_datetime_run", datetime))
+        + " /* " + nthTry + ". try */"
+    )
+  }
+
   def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[Iterator[StatisticsModel]] = {
     Try {
       val dayBuckets = Util.getDayBuckets(datetime)
-      val resultSetFutures = for (dayBucket <- dayBuckets)
-        yield session.executeAsync(
-          select()
-            .from(tablename)
-            .where(QueryBuilder.eq("testcase_id", testcaseId))
-              .and(QueryBuilder.eq("day_bucket", dayBucket))
-              .and(QueryBuilder.gte("testresult_datetime_run", datetime))
-        )
-      val resultSets = resultSetFutures.map(_.get())
+      val func = (nthTry: Int) => {
+        val resultSetFutures = for (dayBucket <- dayBuckets)
+          yield getAllForTestcaseIdAndDayBucketSinceDatetime(testcaseId, dayBucket, datetime, nthTry)
+        resultSetFutures.map(_.get())
+      }
+
+      val resultSets = retry(3)(func)
 
       /*
       Executing asynchronously and then immediately resolving all futures via get()

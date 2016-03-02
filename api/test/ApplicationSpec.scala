@@ -146,7 +146,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       status(response) mustBe BAD_REQUEST
       contentType(response) mustBe Some("application/json")
       charset(response) mustBe Some("utf-8")
-      contentAsString(response) mustBe """{"message":"Invalid minTestresultDatetimeRun format, use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)"}"""
+      contentAsString(response) mustBe """{"message":"Invalid minTestresultDatetimeRun format. You provided 'foo', use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)"}"""
     }
 
     "return a JSON object with an error message if the minTestresultDatetimeRun string is empty" in {
@@ -155,7 +155,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       status(response) mustBe BAD_REQUEST
       contentType(response) mustBe Some("application/json")
       charset(response) mustBe Some("utf-8")
-      contentAsString(response) mustBe """{"message":"Invalid minTestresultDatetimeRun format, use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)"}"""
+      contentAsString(response) mustBe """{"message":"Invalid minTestresultDatetimeRun format. You provided '', use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)"}"""
     }
   }
 

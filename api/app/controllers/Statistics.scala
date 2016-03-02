@@ -47,11 +47,17 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
                 )
             ).as("application/json; charset=utf-8")
           }
-          case Failure(ex) => InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + ex.getMessage))))
+          case Failure(ex) => {
+            val message = ex.getCause match {
+              case e: com.datastax.driver.core.exceptions.ReadTimeoutException => "Database read timeout"
+              case _ => ex.getMessage
+            }
+            InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + message))))
+          }
         }
       case Failure(ex) => ex match {
         case e: java.text.ParseException =>
-          BadRequest(Json.toJson(Map("message" -> ("Invalid minTestresultDatetimeRun format, use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)"))))
+          BadRequest(Json.toJson(Map("message" -> (s"Invalid minTestresultDatetimeRun format. You provided '$minTestresultDatetimeRun', use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)"))))
         case e => InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + e.getMessage))))
       }
     }
