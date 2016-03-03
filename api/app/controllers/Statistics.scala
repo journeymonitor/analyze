@@ -48,9 +48,11 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
             ).as("application/json; charset=utf-8")
           }
           case Failure(ex) => {
-            val message = ex.getCause match {
-              case e: com.datastax.driver.core.exceptions.ReadTimeoutException => "Database read timeout"
-              case _ => ex.getMessage
+            val cause = if (ex.getCause == null) ex else ex.getCause
+            val message = cause match {
+              case c: com.datastax.driver.core.exceptions.NoHostAvailableException => "Not enough database nodes available"
+              case c: com.datastax.driver.core.exceptions.ReadTimeoutException => "Database read timeout"
+              case c => c.getMessage
             }
             InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + message))))
           }

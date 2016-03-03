@@ -20,8 +20,9 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
   // TODO: Problematic if test case runs at 23:59:59...
   val yesterday = Calendar.getInstance()
   yesterday.roll(Calendar.DAY_OF_MONTH, -1)
-  val daybucket = Util.yMd(yesterday)
-  val todayTimestamp = yesterday.getTime.getTime / 1000 * 1000
+  val yesterdayDaybucket = Util.yMd(yesterday)
+  val yesterdayTimestamp = yesterday.getTime.getTime / 1000 * 1000
+  val yesterdayDatetime = java.net.URLEncoder.encode(Util.fullDatetimeWithRfc822Tz(yesterday), "utf-8")
   // zeroing last three digits because the app time resolution is seconds
 
   class FakeApplicationComponents(context: Context) extends AppComponents(context) {
@@ -31,10 +32,31 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
 
     val pc = new ScassandraServerRule().primingClient()
 
+    import scala.collection.JavaConversions._ // required to map from Scala 'Any' to Java '? extends Object>'
+    val row = Map[String, Any](
+      "testresult_id" -> "foo",
+      "testresult_datetime_run" -> yesterdayTimestamp,
+      "runtime_milliseconds" -> 42,
+      "number_of_200" -> 23,
+      "number_of_400" -> 4,
+      "number_of_500" -> 5
+    )
+
+    val result = then()
+      .withColumnTypes(
+        column("testresult_id", TEXT),
+        column("testresult_datetime_run", TIMESTAMP),
+        column("runtime_milliseconds", INT),
+        column("number_of_200", INT),
+        column("number_of_400", INT),
+        column("number_of_500", INT)
+      )
+      .withRows(row)
+
     val query3readtimeouts = s"SELECT * FROM statistics " +
       s"WHERE testcase_id='testcase3readtimeouts' " +
-      s"AND day_bucket='$daybucket' " +
-      s"AND testresult_datetime_run>=$todayTimestamp;"
+      s"AND day_bucket='$yesterdayDaybucket' " +
+      s"AND testresult_datetime_run>=$yesterdayTimestamp;"
     val timeout = then().withResult(PrimingRequest.Result.read_request_timeout)
 
     pc.prime(PrimingRequest.queryBuilder()
@@ -55,7 +77,10 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
       .build()
     )
 
-    val query2readtimeouts = "SELECT * FROM statistics WHERE testcase_id='testcase2readtimeouts' LIMIT 2;"
+    val query2readtimeouts = s"SELECT * FROM statistics " +
+      s"WHERE testcase_id='testcase2readtimeouts' " +
+      s"AND day_bucket='$yesterdayDaybucket' " +
+      s"AND testresult_datetime_run>=$yesterdayTimestamp;"
 
     pc.prime(PrimingRequest.queryBuilder()
       .withQuery(query2readtimeouts + " /* 1. try */")
@@ -69,32 +94,16 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
       .build()
     )
 
-    import scala.collection.JavaConversions._ // required to map from Scala 'Any' to Java '? extends Object>'
-    val row = Map[String, Any](
-      "testresult_id" -> "foo",
-      "testresult_datetime_run" -> new java.util.Date(),
-      "runtime_milliseconds" -> 42,
-      "number_of_200" -> 23,
-      "number_of_400" -> 4,
-      "number_of_500" -> 5
-    )
-
     pc.prime(PrimingRequest.queryBuilder()
       .withQuery(query2readtimeouts + " /* 3. try */")
-      .withThen(then()
-        .withColumnTypes(
-          column("testresult_id", TEXT),
-          column("runtime_milliseconds", INT),
-          column("number_of_200", INT),
-          column("number_of_400", INT),
-          column("number_of_500", INT)
-        )
-        .withRows(row)
-      )
+      .withThen(result)
       .build()
     )
 
-    val query3unavailable = "SELECT * FROM statistics WHERE testcase_id='testcase3unavailable' LIMIT 2;"
+    val query3unavailable = s"SELECT * FROM statistics " +
+      s"WHERE testcase_id='testcase3unavailable' " +
+      s"AND day_bucket='$yesterdayDaybucket' " +
+      s"AND testresult_datetime_run>=$yesterdayTimestamp;"
     val unavailable = then().withResult(PrimingRequest.Result.unavailable)
 
     pc.prime(PrimingRequest.queryBuilder()
@@ -115,7 +124,10 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
       .build()
     )
 
-    val query2unavailable = "SELECT * FROM statistics WHERE testcase_id='testcase2unavailable' LIMIT 2;"
+    val query2unavailable = s"SELECT * FROM statistics " +
+      s"WHERE testcase_id='testcase2unavailable' " +
+      s"AND day_bucket='$yesterdayDaybucket' " +
+      s"AND testresult_datetime_run>=$yesterdayTimestamp;"
 
     pc.prime(PrimingRequest.queryBuilder()
       .withQuery(query2unavailable + " /* 1. try */")
@@ -131,16 +143,7 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
 
     pc.prime(PrimingRequest.queryBuilder()
       .withQuery(query2unavailable + " /* 3. try */")
-      .withThen(then()
-        .withColumnTypes(
-          column("testresult_id", TEXT),
-          column("runtime_milliseconds", INT),
-          column("number_of_200", INT),
-          column("number_of_400", INT),
-          column("number_of_500", INT)
-        )
-        .withRows(row)
-      )
+      .withThen(result)
       .build()
     )
 
@@ -168,43 +171,47 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
   "Integrated application with failing Cassandra" should {
 
     "return an error upon encountering 3 Cassandra read timeouts in a row" in {
-      val datetime = java.net.URLEncoder.encode(Util.fullDatetimeWithRfc822Tz(yesterday), "utf-8")
-
       go to "http://localhost:" +
         port +
-        s"/testcases/testcase3readtimeouts/statistics/latest/?minTestresultDatetimeRun=$datetime"
+        s"/testcases/testcase3readtimeouts/statistics/latest/?minTestresultDatetimeRun=$yesterdayDatetime"
       pageSource mustBe """{"message":"An error occured: Database read timeout"}"""
     }
 
-    /*
     "return a result upon encountering only 2 Cassandra read timeouts in a row followed by a success" in {
-      go to "http://localhost:" + port + "/testcases/testcase2readtimeouts/statistics/latest/?n=2"
-      pageSource mustBe
-        """
-          |[{"testresultId":"foo",
-          |"runtimeMilliseconds":42,
-          |"numberOf200":23,
-          |"numberOf400":4,
-          |"numberOf500":5}]
-          |""".stripMargin.replace("\n", "")
-    }
+        go to "http://localhost:" +
+          port +
+          s"/testcases/testcase2readtimeouts/statistics/latest/?minTestresultDatetimeRun=$yesterdayDatetime"
+        pageSource mustBe
+          s"""
+            |[{"testresultId":"foo",
+            |"testresultDatetimeRun":$yesterdayTimestamp,
+            |"runtimeMilliseconds":42,
+            |"numberOf200":23,
+            |"numberOf400":4,
+            |"numberOf500":5}]
+            |""".stripMargin.replace("\n", "")
+      }
 
     "return an error upon encountering 3x 'Cassandra unavailable' in a row" in {
-      go to "http://localhost:" + port + "/testcases/testcase3unavailable/statistics/latest/?n=2"
-      pageSource mustBe """{"message":"An error occured"}"""
+      go to "http://localhost:" +
+        port +
+        s"/testcases/testcase3unavailable/statistics/latest/?minTestresultDatetimeRun=$yesterdayDatetime"
+      pageSource mustBe """{"message":"An error occured: Not enough database nodes available"}"""
     }
 
     "return a result upon encountering only 2x 'Cassandra unavailable' in a row followed by a success" in {
-      go to "http://localhost:" + port + "/testcases/testcase2unavailable/statistics/latest/?n=2"
+      go to "http://localhost:" +
+        port +
+        s"/testcases/testcase2unavailable/statistics/latest/?minTestresultDatetimeRun=$yesterdayDatetime"
       pageSource mustBe
-        """
+        s"""
           |[{"testresultId":"foo",
+          |"testresultDatetimeRun":$yesterdayTimestamp,
           |"runtimeMilliseconds":42,
           |"numberOf200":23,
           |"numberOf400":4,
           |"numberOf500":5}]
           |""".stripMargin.replace("\n", "")
     }
-    */
   }
 }
