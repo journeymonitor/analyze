@@ -1,13 +1,15 @@
 import java.io.File
 import java.util.Date
+
 import com.journeymonitor.analyze.common.models.StatisticsModel
-import com.journeymonitor.analyze.common.repositories.{StatisticsRepository, Repository}
+import com.journeymonitor.analyze.common.repositories.{Repository, StatisticsRepository}
 import org.scalatestplus.play._
 import play.api
 import play.api.ApplicationLoader.Context
 import play.api.test.Helpers._
 import play.api.test._
 import play.api.{ApplicationLoader, Environment, Mode}
+
 import scala.util.Try
 
 class MockStatisticsRepository extends Repository[StatisticsModel, String] with StatisticsRepository {

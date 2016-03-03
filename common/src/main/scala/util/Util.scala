@@ -3,7 +3,7 @@ package com.journeymonitor.analyze.common.util
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-import scala.collection.{mutable, Seq}
+import scala.collection.{Seq, mutable}
 
 object Util {
   def fullDatetimeWithRfc822Tz(calendar: Calendar): String = {

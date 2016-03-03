@@ -1,5 +1,4 @@
 import java.io.File
-import java.text.SimpleDateFormat
 import java.util.Calendar
 
 import com.journeymonitor.analyze.common.util.Util

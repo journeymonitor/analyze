@@ -4,13 +4,12 @@ import java.text.SimpleDateFormat
 
 import com.journeymonitor.analyze.common.models.StatisticsModel
 import com.journeymonitor.analyze.common.repositories.StatisticsRepository
-import play.api.libs.functional.syntax._
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 import play.api.mvc._
-import scala.concurrent.ExecutionContext.Implicits.global
 
-import scala.util.{Try, Success, Failure}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success, Try}
 
 class Statistics(statisticsRepository: StatisticsRepository) extends Controller {
 

@@ -1,12 +1,9 @@
 package com.journeymonitor.analyze.common.repositories
 
-import java.text.SimpleDateFormat
-import java.util.Calendar
-
 import com.datastax.driver.core.exceptions.{NoHostAvailableException, ReadTimeoutException}
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder._
-import com.datastax.driver.core.{ResultSetFuture, ResultSet, Row, Session}
+import com.datastax.driver.core.{ResultSet, ResultSetFuture, Row, Session}
 import com.journeymonitor.analyze.common.models.StatisticsModel
 import com.journeymonitor.analyze.common.util.Util
 
