@@ -26,7 +26,7 @@ class MockStatisticsRepository extends Repository[StatisticsModel, String] with 
     var calls = 0
     def next(): StatisticsModel = {
       calls = calls + 1
-      StatisticsModel("mocked-" + testcaseId + "-" + calls, new Date(1456006032 + calls), 987, 123, 456, 789)
+      StatisticsModel("mocked-" + testcaseId + "-" + calls, new Date(1456006032000L + calls), 987, 123, 456, 789)
     }
 
     def hasNext = calls < 2
@@ -38,7 +38,7 @@ class MockStatisticsRepository extends Repository[StatisticsModel, String] with 
         case "testcaseWithFailure" => throw new Exception("Error in mock")
         case "testcaseWithoutStatistics" => List.empty[StatisticsModel]
         case id => List(
-          StatisticsModel("mocked-" + id, new Date(1456006032), 987, 123, 456, 789)
+          StatisticsModel("mocked-" + id, new Date(1456006032000L), 987, 123, 456, 789)
         )
       }
     }
@@ -109,13 +109,13 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
         """
           |[
           |{"testresultId":"mocked-testcase1-1",
-          |"testresultDatetimeRun":1456006033,
+          |"testresultDatetimeRun":"2016-02-20 23:07:12+0100",
           |"runtimeMilliseconds":987,
           |"numberOf200":123,
           |"numberOf400":456,
           |"numberOf500":789},
           |{"testresultId":"mocked-testcase1-2",
-          |"testresultDatetimeRun":1456006034,
+          |"testresultDatetimeRun":"2016-02-20 23:07:12+0100",
           |"runtimeMilliseconds":987,
           |"numberOf200":123,
           |"numberOf400":456,

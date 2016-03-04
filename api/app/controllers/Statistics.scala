@@ -13,6 +13,12 @@ import scala.util.{Failure, Success, Try}
 
 class Statistics(statisticsRepository: StatisticsRepository) extends Controller {
 
+  implicit val dateFormat: Writes[java.util.Date] = new Writes[java.util.Date] {
+    override def writes(o: java.util.Date): JsValue = {
+      JsString(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ").format(o))
+    }
+  }
+
   implicit val StatisticsWrites = Json.writes[StatisticsModel]
 
   def showLatest(testcaseId: String, minTestresultDatetimeRun: String) = Action {
