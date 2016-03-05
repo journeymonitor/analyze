@@ -34,7 +34,8 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
     } match {
       case Success(datetime) =>
         statisticsRepository.getAllForTestcaseIdSinceDatetime(testcaseId, datetime) match {
-          case Success(statisticsModelIterator: Iterator[StatisticsModel]) => {
+
+          case Success(statisticsModelIterator: Iterator[StatisticsModel]) =>
             val modelsAsStringsIterator: Iterator[String] = for (statisticsModel <- statisticsModelIterator)
               yield Json.toJson(statisticsModel).toString + { if (statisticsModelIterator.hasNext) "," else "" }
 
@@ -43,16 +44,13 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
             val end = Enumerator.enumerate(List("]"))
 
             Ok.chunked(
-              begin andThen(
-                enumeratedModels andThen(
-                  end andThen(
+              begin andThen
+                enumeratedModels andThen
+                  end andThen
                     Enumerator.eof
-                    )
-                  )
-                )
             ).as("application/json; charset=utf-8")
-          }
-          case Failure(ex) => {
+
+          case Failure(ex) =>
             val cause = if (ex.getCause == null) ex else ex.getCause
             val message = cause match {
               case c: com.datastax.driver.core.exceptions.NoHostAvailableException => "Not enough database nodes available"
@@ -60,11 +58,11 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
               case c => c.getMessage
             }
             InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + message))))
-          }
+
         }
       case Failure(ex) => ex match {
         case e: java.text.ParseException =>
-          BadRequest(Json.toJson(Map("message" -> (s"Invalid minTestresultDatetimeRun format. You provided '$minTestresultDatetimeRun', use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)"))))
+          BadRequest(Json.toJson(Map("message" -> s"Invalid minTestresultDatetimeRun format. You provided '$minTestresultDatetimeRun', use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)")))
         case e => InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + e.getMessage))))
       }
     }
