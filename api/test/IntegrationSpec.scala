@@ -84,7 +84,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |[
           |  {
           |    "testresultId":"testresult3",
-          |    "testresultDatetimeRun":1451784732000,
+          |    "testresultDatetimeRun":"2016-01-03<space>02:32:12+0100",
           |    "runtimeMilliseconds":333,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -92,7 +92,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult2",
-          |    "testresultDatetimeRun":1451698332000,
+          |    "testresultDatetimeRun":"2016-01-02<space>02:32:12+0100",
           |    "runtimeMilliseconds":222,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -100,7 +100,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult1b",
-          |    "testresultDatetimeRun":1451615532000,
+          |    "testresultDatetimeRun":"2016-01-01<space>03:32:12+0100",
           |    "runtimeMilliseconds":111,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -108,14 +108,14 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult1a",
-          |    "testresultDatetimeRun":1451611932000,
+          |    "testresultDatetimeRun":"2016-01-01<space>02:32:12+0100",
           |    "runtimeMilliseconds":111,
           |    "numberOf200":123,
           |    "numberOf400":456,
           |    "numberOf500":789
           |  }
           |]
-          |""".stripMargin.replace("\n", "").replace(" ", "")
+          |""".stripMargin.replace("\n", "").replace(" ", "").replace("<space>", " ")
     }
 
     "return a JSON array with all statistics entries for a given testcase id when limited to the datetime of the earliest row" in {
@@ -125,7 +125,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |[
           |  {
           |    "testresultId":"testresult3",
-          |    "testresultDatetimeRun":1451784732000,
+          |    "testresultDatetimeRun":"2016-01-03<space>02:32:12+0100",
           |    "runtimeMilliseconds":333,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -133,7 +133,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult2",
-          |    "testresultDatetimeRun":1451698332000,
+          |    "testresultDatetimeRun":"2016-01-02<space>02:32:12+0100",
           |    "runtimeMilliseconds":222,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -141,7 +141,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult1b",
-          |    "testresultDatetimeRun":1451615532000,
+          |    "testresultDatetimeRun":"2016-01-01<space>03:32:12+0100",
           |    "runtimeMilliseconds":111,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -149,14 +149,14 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult1a",
-          |    "testresultDatetimeRun":1451611932000,
+          |    "testresultDatetimeRun":"2016-01-01<space>02:32:12+0100",
           |    "runtimeMilliseconds":111,
           |    "numberOf200":123,
           |    "numberOf400":456,
           |    "numberOf500":789
           |  }
           |]
-          |""".stripMargin.replace("\n", "").replace(" ", "")
+          |""".stripMargin.replace("\n", "").replace(" ", "").replace("<space>", " ")
     }
 
     "return a JSON array with all but the earliest statistics entries for a given testcase id when limited to the datetime of the earliest row plus 1 second" in {
@@ -166,7 +166,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |[
           |  {
           |    "testresultId":"testresult3",
-          |    "testresultDatetimeRun":1451784732000,
+          |    "testresultDatetimeRun":"2016-01-03<space>02:32:12+0100",
           |    "runtimeMilliseconds":333,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -174,7 +174,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult2",
-          |    "testresultDatetimeRun":1451698332000,
+          |    "testresultDatetimeRun":"2016-01-02<space>02:32:12+0100",
           |    "runtimeMilliseconds":222,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -182,14 +182,14 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult1b",
-          |    "testresultDatetimeRun":1451615532000,
+          |    "testresultDatetimeRun":"2016-01-01<space>03:32:12+0100",
           |    "runtimeMilliseconds":111,
           |    "numberOf200":123,
           |    "numberOf400":456,
           |    "numberOf500":789
           |  }
           |]
-          |""".stripMargin.replace("\n", "").replace(" ", "")
+          |""".stripMargin.replace("\n", "").replace(" ", "").replace("<space>", " ")
     }
 
     "return an empty JSON array when limited to a datetime for which only older entries exist" in {

@@ -21,7 +21,8 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
   yesterday.roll(Calendar.DAY_OF_MONTH, -1)
   val yesterdayDaybucket = Util.yMd(yesterday)
   val yesterdayTimestamp = yesterday.getTime.getTime / 1000 * 1000
-  val yesterdayDatetime = java.net.URLEncoder.encode(Util.fullDatetimeWithRfc822Tz(yesterday), "utf-8")
+  val yesterdayDatetime = Util.fullDatetimeWithRfc822Tz(yesterday)
+  val yesterdayDatetimeUrlEncoded = java.net.URLEncoder.encode(yesterdayDatetime, "utf-8")
   // zeroing last three digits because the app time resolution is seconds
 
   class FakeApplicationComponents(context: Context) extends AppComponents(context) {
@@ -172,18 +173,18 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
     "return an error upon encountering 3 Cassandra read timeouts in a row" in {
       go to "http://localhost:" +
         port +
-        s"/testcases/testcase3readtimeouts/statistics/latest/?minTestresultDatetimeRun=$yesterdayDatetime"
+        s"/testcases/testcase3readtimeouts/statistics/latest/?minTestresultDatetimeRun=$yesterdayDatetimeUrlEncoded"
       pageSource mustBe """{"message":"An error occured: Database read timeout"}"""
     }
 
     "return a result upon encountering only 2 Cassandra read timeouts in a row followed by a success" in {
         go to "http://localhost:" +
           port +
-          s"/testcases/testcase2readtimeouts/statistics/latest/?minTestresultDatetimeRun=$yesterdayDatetime"
+          s"/testcases/testcase2readtimeouts/statistics/latest/?minTestresultDatetimeRun=$yesterdayDatetimeUrlEncoded"
         pageSource mustBe
           s"""
             |[{"testresultId":"foo",
-            |"testresultDatetimeRun":$yesterdayTimestamp,
+            |"testresultDatetimeRun":"$yesterdayDatetime",
             |"runtimeMilliseconds":42,
             |"numberOf200":23,
             |"numberOf400":4,
@@ -194,18 +195,18 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
     "return an error upon encountering 3x 'Cassandra unavailable' in a row" in {
       go to "http://localhost:" +
         port +
-        s"/testcases/testcase3unavailable/statistics/latest/?minTestresultDatetimeRun=$yesterdayDatetime"
+        s"/testcases/testcase3unavailable/statistics/latest/?minTestresultDatetimeRun=$yesterdayDatetimeUrlEncoded"
       pageSource mustBe """{"message":"An error occured: Not enough database nodes available"}"""
     }
 
     "return a result upon encountering only 2x 'Cassandra unavailable' in a row followed by a success" in {
       go to "http://localhost:" +
         port +
-        s"/testcases/testcase2unavailable/statistics/latest/?minTestresultDatetimeRun=$yesterdayDatetime"
+        s"/testcases/testcase2unavailable/statistics/latest/?minTestresultDatetimeRun=$yesterdayDatetimeUrlEncoded"
       pageSource mustBe
         s"""
           |[{"testresultId":"foo",
-          |"testresultDatetimeRun":$yesterdayTimestamp,
+          |"testresultDatetimeRun":"$yesterdayDatetime",
           |"runtimeMilliseconds":42,
           |"numberOf200":23,
           |"numberOf400":4,
