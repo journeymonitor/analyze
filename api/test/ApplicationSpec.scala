@@ -109,13 +109,13 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
         """
           |[
           |{"testresultId":"mocked-testcase1-1",
-          |"testresultDatetimeRun":"2016-02-20 23:07:12+0100",
+          |"testresultDatetimeRun":"2016-02-20 22:07:12+0000",
           |"runtimeMilliseconds":987,
           |"numberOf200":123,
           |"numberOf400":456,
           |"numberOf500":789},
           |{"testresultId":"mocked-testcase1-2",
-          |"testresultDatetimeRun":"2016-02-20 23:07:12+0100",
+          |"testresultDatetimeRun":"2016-02-20 22:07:12+0000",
           |"runtimeMilliseconds":987,
           |"numberOf200":123,
           |"numberOf400":456,

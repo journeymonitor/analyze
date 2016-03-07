@@ -7,7 +7,8 @@ import scala.collection.{Seq, mutable}
 
 object Util {
   def fullDatetimeWithRfc822Tz(calendar: Calendar): String = {
-    var sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ")
+    val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ")
+    sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
     sdf.format(calendar.getTime)
   }
 

@@ -84,7 +84,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |[
           |  {
           |    "testresultId":"testresult3",
-          |    "testresultDatetimeRun":"2016-01-03<space>02:32:12+0100",
+          |    "testresultDatetimeRun":"2016-01-03<space>01:32:12+0000",
           |    "runtimeMilliseconds":333,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -92,7 +92,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult2",
-          |    "testresultDatetimeRun":"2016-01-02<space>02:32:12+0100",
+          |    "testresultDatetimeRun":"2016-01-02<space>01:32:12+0000",
           |    "runtimeMilliseconds":222,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -100,7 +100,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult1b",
-          |    "testresultDatetimeRun":"2016-01-01<space>03:32:12+0100",
+          |    "testresultDatetimeRun":"2016-01-01<space>02:32:12+0000",
           |    "runtimeMilliseconds":111,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -108,7 +108,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult1a",
-          |    "testresultDatetimeRun":"2016-01-01<space>02:32:12+0100",
+          |    "testresultDatetimeRun":"2016-01-01<space>01:32:12+0000",
           |    "runtimeMilliseconds":111,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -125,7 +125,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |[
           |  {
           |    "testresultId":"testresult3",
-          |    "testresultDatetimeRun":"2016-01-03<space>02:32:12+0100",
+          |    "testresultDatetimeRun":"2016-01-03<space>01:32:12+0000",
           |    "runtimeMilliseconds":333,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -133,7 +133,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult2",
-          |    "testresultDatetimeRun":"2016-01-02<space>02:32:12+0100",
+          |    "testresultDatetimeRun":"2016-01-02<space>01:32:12+0000",
           |    "runtimeMilliseconds":222,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -141,7 +141,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult1b",
-          |    "testresultDatetimeRun":"2016-01-01<space>03:32:12+0100",
+          |    "testresultDatetimeRun":"2016-01-01<space>02:32:12+0000",
           |    "runtimeMilliseconds":111,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -149,7 +149,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult1a",
-          |    "testresultDatetimeRun":"2016-01-01<space>02:32:12+0100",
+          |    "testresultDatetimeRun":"2016-01-01<space>01:32:12+0000",
           |    "runtimeMilliseconds":111,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -166,7 +166,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |[
           |  {
           |    "testresultId":"testresult3",
-          |    "testresultDatetimeRun":"2016-01-03<space>02:32:12+0100",
+          |    "testresultDatetimeRun":"2016-01-03<space>01:32:12+0000",
           |    "runtimeMilliseconds":333,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -174,7 +174,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult2",
-          |    "testresultDatetimeRun":"2016-01-02<space>02:32:12+0100",
+          |    "testresultDatetimeRun":"2016-01-02<space>01:32:12+0000",
           |    "runtimeMilliseconds":222,
           |    "numberOf200":123,
           |    "numberOf400":456,
@@ -182,7 +182,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
           |  },
           |  {
           |    "testresultId":"testresult1b",
-          |    "testresultDatetimeRun":"2016-01-01<space>03:32:12+0100",
+          |    "testresultDatetimeRun":"2016-01-01<space>02:32:12+0000",
           |    "runtimeMilliseconds":111,
           |    "numberOf200":123,
           |    "numberOf400":456,

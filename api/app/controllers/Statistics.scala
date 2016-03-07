@@ -15,7 +15,9 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
 
   implicit val dateFormat: Writes[java.util.Date] = new Writes[java.util.Date] {
     override def writes(o: java.util.Date): JsValue = {
-      JsString(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ").format(o))
+      val sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ")
+      sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
+      JsString(sdf.format(o))
     }
   }
 
