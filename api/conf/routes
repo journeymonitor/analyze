@@ -3,10 +3,10 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
+GET     /                           com.journeymonitor.analyze.api.controllers.Application.index
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 
 # REST API
-GET     /testcases/:testcaseId/statistics/latest/    controllers.Statistics.showLatest(testcaseId: String, minTestresultDatetimeRun: String ?= "1970-01-01 00:00:00+0000")
+GET     /testcases/:testcaseId/statistics/latest/    com.journeymonitor.analyze.api.controllers.Statistics.showLatest(testcaseId: String, minTestresultDatetimeRun: String ?= "1970-01-01 00:00:00+0000")

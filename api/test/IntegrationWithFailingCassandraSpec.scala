@@ -1,6 +1,9 @@
+package com.journeymonitor.analyze.api.test
+
 import java.io.File
 import java.util.Calendar
 
+import com.journeymonitor.analyze.api.AppComponents
 import com.journeymonitor.analyze.common.util.Util
 import com.journeymonitor.analyze.common.{CassandraClient, CassandraConnectionUri}
 import org.scalatestplus.play._

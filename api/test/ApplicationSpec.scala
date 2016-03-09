@@ -1,3 +1,5 @@
+package com.journeymonitor.analyze.api.test
+
 import java.io.File
 
 import org.scalatestplus.play._
@@ -34,6 +36,7 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
       contentType(home) mustBe Some("text/html")
       contentAsString(home) must include ("Your new application is ready.")
     }
+
 
   }
 

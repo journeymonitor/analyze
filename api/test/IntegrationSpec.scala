@@ -1,5 +1,8 @@
+package com.journeymonitor.analyze.api.test
+
 import java.io.File
 
+import com.journeymonitor.analyze.api.AppLoader
 import com.journeymonitor.analyze.common.{CassandraClient, CassandraConnectionUri}
 import org.scalatest.BeforeAndAfter
 import org.scalatestplus.play._

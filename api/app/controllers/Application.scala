@@ -1,4 +1,4 @@
-package controllers
+package com.journeymonitor.analyze.api.controllers
 
 import play.api.mvc._
 

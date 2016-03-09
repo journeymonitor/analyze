@@ -1,4 +1,4 @@
-package components
+package com.journeymonitor.analyze.api.components
 
 import com.datastax.driver.core.Session
 import com.journeymonitor.analyze.common.repositories.{StatisticsCassandraRepository, StatisticsRepository}

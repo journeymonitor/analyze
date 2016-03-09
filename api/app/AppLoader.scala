@@ -1,3 +1,5 @@
+package com.journeymonitor.analyze.api
+
 import components.CassandraRepositoryComponents
 import controllers.Statistics
 import play.api.ApplicationLoader.Context
@@ -14,7 +16,7 @@ class AppComponents(context: Context) extends BuiltInComponentsFromContext(conte
 
   lazy val applicationController = new controllers.Application()
   lazy val statisticsController = new Statistics(statisticsRepository)
-  lazy val assets = new controllers.Assets(httpErrorHandler)
+  lazy val assets = new _root_.controllers.Assets(httpErrorHandler)
 
   override def router: Router = new Routes(
     httpErrorHandler,
