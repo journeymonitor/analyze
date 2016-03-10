@@ -4,7 +4,7 @@ val commonSettings = Seq(
   organization := "com.journeymonitor",
   version := "0.1",
   javacOptions := Seq("-source", "1.8", "-target", "1.8"),
-  scalaVersion := "2.11.7",
+  scalaVersion := "2.11.8",
   scalacOptions := Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-encoding", "utf8"),
   // stole the following from https://github.com/datastax/spark-cassandra-connector/pull/858/files
   // in order to avoid assembly merge errors with netty
