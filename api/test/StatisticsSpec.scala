@@ -8,6 +8,7 @@ import com.journeymonitor.analyze.common.models.StatisticsModel
 import com.journeymonitor.analyze.common.repositories.{Repository, StatisticsRepository}
 import org.scalatestplus.play._
 import play.api
+import play.api.Play
 import play.api.ApplicationLoader.Context
 import play.api.test.Helpers._
 import play.api.test._
@@ -87,6 +88,7 @@ class StatisticsSpec extends PlaySpec with OneAppPerSuite {
   "Non-integrated statistics controller" should {
 
     "return a JSON array with the latest statistics entry for a given testcase id" in {
+      implicit val materializer = Play.current.materializer
       val Some(response) = route(FakeRequest(GET, "/testcases/testcase1/statistics/latest/"))
 
       status(response) mustBe OK
@@ -113,6 +115,7 @@ class StatisticsSpec extends PlaySpec with OneAppPerSuite {
     }
 
     "return a JSON object with an error message if there is a problem with the repository" in {
+      implicit val materializer = Play.current.materializer
       val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithFailure/statistics/latest/"))
 
       status(response) mustBe INTERNAL_SERVER_ERROR
@@ -122,6 +125,7 @@ class StatisticsSpec extends PlaySpec with OneAppPerSuite {
     }
 
     "return an empty JSON array if no statistics for a given testcase id exist" in {
+      implicit val materializer = Play.current.materializer
       val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithoutStatistics/statistics/latest/"))
 
       status(response) mustBe OK
@@ -131,6 +135,7 @@ class StatisticsSpec extends PlaySpec with OneAppPerSuite {
     }
 
     "return a JSON object with an error message if the minTestresultDatetimeRun string is incorrectly formatted" in {
+      implicit val materializer = Play.current.materializer
       val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithFailure/statistics/latest/?minTestresultDatetimeRun=foo"))
 
       status(response) mustBe BAD_REQUEST
@@ -140,6 +145,7 @@ class StatisticsSpec extends PlaySpec with OneAppPerSuite {
     }
 
     "return a JSON object with an error message if the minTestresultDatetimeRun string is empty" in {
+      implicit val materializer = Play.current.materializer
       val Some(response) = route(FakeRequest(GET, "/testcases/testcaseWithFailure/statistics/latest/?minTestresultDatetimeRun="))
 
       status(response) mustBe BAD_REQUEST

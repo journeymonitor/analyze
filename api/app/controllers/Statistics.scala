@@ -60,12 +60,14 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
               case c => c.getMessage
             }
             InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + message))))
+              .as("application/json; charset=utf-8")
 
         }
       case Failure(ex) => ex match {
         case e: java.text.ParseException =>
-          BadRequest(Json.toJson(Map("message" -> s"Invalid minTestresultDatetimeRun format. You provided '$minTestresultDatetimeRun', use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)")))
+          BadRequest(Json.toJson(Map("message" -> s"Invalid minTestresultDatetimeRun format. You provided '$minTestresultDatetimeRun', use yyyy-MM-dd HH:mm:ssZ (e.g. 2016-01-02 03:04:05+0600)"))).as("application/json; charset=utf-8")
         case e => InternalServerError(Json.toJson(Map("message" -> ("An error occured: " + e.getMessage))))
+          .as("application/json; charset=utf-8")
       }
     }
   }
