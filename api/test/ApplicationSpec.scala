@@ -10,7 +10,7 @@ import play.api.{ApplicationLoader, Environment, Mode}
 
 class ApplicationSpec extends PlaySpec with OneAppPerSuite {
 
-  override implicit lazy val app: api.Application = {
+  override lazy val app: api.Application = {
     val appLoader = new FakeAppLoader
     appLoader.load(
       ApplicationLoader.createContext(
@@ -23,13 +23,13 @@ class ApplicationSpec extends PlaySpec with OneAppPerSuite {
   "Non-integrated application" should {
 
     "send 404 on a bad request" in {
-      val Some(wrongRoute) = route(FakeRequest(GET, "/boum"))
+      val Some(wrongRoute) = route(app, FakeRequest(GET, "/boum"))
 
       status(wrongRoute) mustBe NOT_FOUND
     }
 
     "render the index page" in {
-      val Some(home) = route(FakeRequest(GET, "/"))
+      val Some(home) = route(app, FakeRequest(GET, "/"))
 
       status(home) mustBe OK
 
