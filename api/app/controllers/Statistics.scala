@@ -2,9 +2,9 @@ package com.journeymonitor.analyze.api.controllers
 
 import java.text.SimpleDateFormat
 
+import akka.stream.scaladsl.Source
 import com.journeymonitor.analyze.common.models.StatisticsModel
 import com.journeymonitor.analyze.common.repositories.StatisticsRepository
-import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 import play.api.mvc._
 
@@ -41,16 +41,12 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
             val modelsAsStringsIterator: Iterator[String] = for (statisticsModel <- statisticsModelIterator)
               yield Json.toJson(statisticsModel).toString + { if (statisticsModelIterator.hasNext) "," else "" }
 
-            val enumeratedModels = Enumerator.enumerate(modelsAsStringsIterator)
-            val begin = Enumerator.enumerate(List("["))
-            val end = Enumerator.enumerate(List("]"))
+            val modelsAsStringsSource = Source.fromIterator(() => modelsAsStringsIterator)
+            val beginSource = Source.fromIterator(() => List("[").iterator)
+            val endSource = Source.fromIterator(() => List("]").iterator)
 
-            Ok.chunked(
-              begin andThen
-                enumeratedModels andThen
-                  end andThen
-                    Enumerator.eof
-            ).as("application/json; charset=utf-8")
+            Ok.chunked(beginSource ++ modelsAsStringsSource ++ endSource)
+              .as("application/json; charset=utf-8")
 
           case Failure(ex) =>
             val cause = if (ex.getCause == null) ex else ex.getCause
