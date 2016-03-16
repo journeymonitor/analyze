@@ -121,6 +121,7 @@ object SparkApp {
       "statistics",
       SomeColumns(
         "testcase_id"             as "testcaseId",
+        "day_bucket"              as "dayBucket",
         "testresult_id"           as "testresultId",
         "testresult_datetime_run" as "testresultDatetimeRun",
         "runtime_milliseconds"    as "totalRequestTime",
