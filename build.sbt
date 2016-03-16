@@ -47,6 +47,7 @@ lazy val spark = project.in(file("spark"))
   )
   .settings(libraryDependencies ++= (sparkDependencies ++ json4sDependencies ++ testDependencies))
   .settings(assemblyJarName in assembly := "journeymonitor-analyze-spark-assembly.jar")
+  .dependsOn(common)
 
 lazy val importer = project.in(file("importer"))
   .settings(commonSettings:_*)

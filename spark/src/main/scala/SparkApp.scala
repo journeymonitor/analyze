@@ -5,6 +5,7 @@ import org.apache.spark._
 import org.apache.spark.rdd.RDD
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import com.journeymonitor.analyze.common.util.Util
 
 /*
 
@@ -69,10 +70,7 @@ object HarAnalyzer {
       cal.setTime(testresult.datetimeRun)
       Statistics(
         testcaseId = testresult.testcaseId,
-        dayBucket =
-                  cal.get(java.util.Calendar.YEAR)
-          + "-" + (cal.get(java.util.Calendar.MONTH) + 1) // Zero-based? Are you kidding me?
-          + "-" + cal.get(java.util.Calendar.DAY_OF_MONTH),
+        dayBucket = Util.yMd(cal),
         testresultDatetimeRun = testresult.datetimeRun,
         testresultId = testresult.testresultId,
         totalRequestTime = calculateTotalRequestTime(entries),

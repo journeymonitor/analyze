@@ -10,7 +10,7 @@ import org.scalatest.{BeforeAndAfter, FunSpec, Matchers}
 object FixtureGenerator {
   def getTestresultsRDD(sc: SparkContext) = {
     val format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    val datetimeRun1 = format.parse("2015-11-17 23:59:59")
+    val datetimeRun1 = format.parse("2015-01-02 23:59:59")
     val datetimeRun2 = format.parse("2015-11-18 00:00:00")
     sc.parallelize(Seq(
       Testresult(
@@ -98,9 +98,9 @@ class SparkExampleSpec extends FunSpec with BeforeAndAfter with Matchers {
       val statistics = statisticsRDD.collect()
 
       statistics(0).testcaseId should be("testcaseId1")
-      statistics(0).dayBucket should be("2015-11-17")
+      statistics(0).dayBucket should be("2015-01-02")
       statistics(0).testresultId should be("testresultId1")
-      statistics(0).testresultDatetimeRun.toString.substring(0, 20) should be("Tue Nov 17 23:59:59 ") // @TODO: Stupid hack because we do not yet store the timezone
+      statistics(0).testresultDatetimeRun.toString.substring(0, 20) should be("Fri Jan 02 23:59:59 ") // @TODO: Stupid hack because we do not yet store the timezone
       statistics(0).testresultDatetimeRun.toString.substring(24) should be("2015")
       statistics(0).numberOfRequestsWithStatus200 should be(1)
       statistics(0).numberOfRequestsWithStatus400 should be(1)
