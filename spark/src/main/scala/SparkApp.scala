@@ -24,34 +24,6 @@ i x x x   i x x x
 m x x x   m x x x
 e         e
 
-
-Table structures:
-
-CREATE TABLE analyze.testresults (
-      testcase_id text,
-      datetime_run timestamp,
-      har text,
-      is_analyzed boolean,
-      testresult_id text,
-      PRIMARY KEY (testresult_id)
-  )
-
-CREATE TABLE analyze.statistics (
-    testcase_id text,
-    testresult_id text,
-    datetime_run timestamp,
-    runtime_milliseconds int,
-    number_of_200 int,
-    number_of_400 int,
-    number_of_500 int,
-    PRIMARY KEY ((testcase_id), datetime_run)
-) WITH CLUSTERING ORDER BY (datetime_run DESC);
-
-The idea here is to have a very even spread of testresults, but to partition the statistics by testcase_id because the
-use case around querying statistics is that we will want to get a list of N last statistics for a testcase:
-
-SELECT * FROM statistics WHERE testcase_id = 'a' LIMIT 10; // will be ORDER BY datetime_run DESC automatically
-
 */
 
 case class Testresult(testcaseId: String,
