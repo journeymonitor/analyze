@@ -79,3 +79,109 @@ Thesis: conf.set("spark.cassandra.connection.host", "1.2.3.4") only defines the 
         cluster - afterwards, the C* cluster topology is known and used for optimal connections from executors
         to C* nodes (see https://github.com/datastax/spark-cassandra-connector/blob/master/doc/1_connecting.md#connection-management)
         -> True
+
+
+### Performance observations
+
+At commit xyz (March 17, 2016):
+
+- 3x Spark worker nodes: 6 GB RAM, 4x 2GHz Core i7, SSD-based Ceph Storage (per node)
+- 1x Spark master node, running the analyze api application: 4 GB RAM, 2x 2GHz Core i7, SSD-based Ceph Storage
+
+Around 2,5 GB of data on each C* node, with ~2524 keys per node for `analyze.statistics` table.
+
+Each primary key combination (1 testcase_id for 1 day_bucket) contains 288 rows on the cluster for testcases that run
+every 5 minutes.
+
+`analyze.statistics` schema:
+
+    CREATE TABLE analyze.statistics (
+        testcase_id text,
+        day_bucket text,
+        testresult_datetime_run timestamp,
+        number_of_200 int,
+        number_of_400 int,
+        number_of_500 int,
+        runtime_milliseconds int,
+        testresult_id text,
+        PRIMARY KEY ((testcase_id, day_bucket), testresult_datetime_run)
+    )
+
+`nodetool cfstats -H analyze.statistics`
+
+    Keyspace: analyze
+        Read Count: 150983
+        Read Latency: 0.1523509203022857 ms.
+        Write Count: 11333890
+        Write Latency: 0.027030531706236784 ms.
+        Pending Flushes: 0
+            Table: statistics
+            SSTable count: 2
+            Space used (live): 35.33 MB
+            Space used (total): 35.33 MB
+            Space used by snapshots (total): 19.29 MB
+            Off heap memory used (total): 15.77 KB
+            SSTable Compression Ratio: 0.3869892763700816
+            Number of keys (estimate): 2569
+            Memtable cell count: 329280
+            Memtable data size: 11.52 MB
+            Memtable off heap memory used: 0 bytes
+            Memtable switch count: 238
+            Local read count: 150983
+            Local read latency: 0.168 ms
+            Local write count: 11333890
+            Local write latency: 0.030 ms
+            Pending flushes: 0
+            Bloom filter false positives: 0
+            Bloom filter false ratio: 0.00000
+            Bloom filter space used: 3.16 KB
+            Bloom filter off heap memory used: 3.14 KB
+            Index summary off heap memory used: 1.3 KB
+            Compression metadata off heap memory used: 11.33 KB
+            Compacted partition minimum bytes: 643 bytes
+            Compacted partition maximum bytes: 103.3 KB
+            Compacted partition mean bytes: 38.06 KB
+            Average live cells per slice (last five minutes): 8.0
+            Maximum live cells per slice (last five minutes): 310
+            Average tombstones per slice (last five minutes): 1.0
+            Maximum tombstones per slice (last five minutes): 1
+
+
+Result of running
+`siege -c 50 -b http://service-misc-experiments-1.service.gkh-setu.de:8081/testcases/657D6D9E-7D59-472A-BD16-B291CC4573DC/statistics/latest/?minTestresultDatetimeRun=2016-03-17+08%3A05%3A12%2B0000`
+which results in 1 C* query per request, from one of the Spark cluster nodes while no Spark job is running:
+
+Transactions:             126404 hits
+Availability:             100.00 %
+Elapsed time:              90.18 secs
+Data transferred:          22.30 MB
+Response time:              0.04 secs
+Transaction rate:        1401.69 trans/sec
+Throughput:                 0.25 MB/sec
+Concurrency:               49.92
+Successful transactions:  126405
+Failed transactions:           0
+Longest transaction:        0.21
+Shortest transaction:       0.00
+
+-> Results in ~20% CPU load on the C* nodes
+
+
+Result of running
+`siege -c 50 -b http://service-misc-experiments-1.service.gkh-setu.de:8081/testcases/657D6D9E-7D59-472A-BD16-B291CC4573DC/statistics/latest/?minTestresultDatetimeRun=2016-03-07+08%3A05%3A12%2B0000`
+which results in 10 C* query per request, from one of the Spark cluster nodes while no Spark job is running:
+
+Transactions:               5666 hits
+Availability:             100.00 %
+Elapsed time:             109.13 secs
+Data transferred:         126.19 MB
+Response time:              0.96 secs
+Transaction rate:          51.92 trans/sec
+Throughput:                 1.16 MB/sec
+Concurrency:               49.77
+Successful transactions:    5666
+Failed transactions:           0
+Longest transaction:        3.46
+Shortest transaction:       0.06
+
+-> Results in ~60% CPU load on the C* nodes
