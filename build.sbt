@@ -30,7 +30,7 @@ lazy val json4sDependencies = Seq (
 )
 
 lazy val sparkDependencies = Seq (
-  "org.apache.spark" %% "spark-core" % "1.5.1" % "provided",
+  "org.apache.spark" %% "spark-core" % "1.6.1" % "provided",
   "com.datastax.spark" %% "spark-cassandra-connector" % "1.5.0-M2"
 )
 
@@ -41,10 +41,6 @@ lazy val common = project
 
 lazy val spark = project.in(file("spark"))
   .settings(commonSettings:_*)
-  .settings(
-    javacOptions := Seq("-source", "1.7", "-target", "1.7"),
-    scalacOptions := Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-encoding", "utf8")
-  )
   .settings(libraryDependencies ++= (sparkDependencies ++ json4sDependencies ++ testDependencies))
   .settings(assemblyJarName in assembly := "journeymonitor-analyze-spark-assembly.jar")
   .dependsOn(common)
