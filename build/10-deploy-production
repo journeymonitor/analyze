@@ -27,4 +27,8 @@ cp api/target/universal/api-1.0-SNAPSHOT.tgz /opt/journeymonitor/analyze/
 /bin/kill -9 `cat /var/tmp/journeymonitor-analyze-api.pid`
 cd /opt/journeymonitor/analyze/
 /bin/tar xvfz api-1.0-SNAPSHOT.tgz
+
+# TODO: This doesn't seem to give control back to the script, making the deployment hang
 /bin/su -s /bin/bash -c ". /etc/journeymonitor/app-analyze-env.sh && /usr/bin/nohup /bin/bash /opt/journeymonitor/analyze/api-1.0-SNAPSHOT/bin/api >> /var/tmp/journeymonitor-analyze-api.log 2>&1 &" journeymonitor || exit 1
+
+echo "Debug: Reached end of 10-deploy-production script"
