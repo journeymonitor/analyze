@@ -1,5 +1,6 @@
 package com.journeymonitor.analyze.spark
 
+import java.util.Calendar
 import com.datastax.spark.connector._
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
@@ -89,7 +90,14 @@ object SparkApp {
     conf.set("spark.cassandra.connection.host", cassandraHost)
     val sc = new SparkContext(conf)
 
-    val rowsRDD = sc.cassandraTable("analyze", "testresults")
+    val cal = Calendar.getInstance()
+    cal.add(Calendar.DATE, -1)
+    val oneDayAgo: java.util.Date = cal.getTime
+
+    val rowsRDD = sc.cassandraTable("analyze", "testresults").filter { row =>
+      val datetimeRun = row.get[java.util.Date]("datetime_run")
+      datetimeRun.after(oneDayAgo)
+    }
 
     // Create RDD with a tuple of Testcase ID, Testresult ID, DateTime of Run, HAR per entry
     // Not calling .cache() because that results in OOM
