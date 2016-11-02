@@ -28,6 +28,6 @@ cp api/target/universal/api-1.0-SNAPSHOT.tgz /opt/journeymonitor/analyze/
 cd /opt/journeymonitor/analyze/
 /bin/tar xvfz api-1.0-SNAPSHOT.tgz
 
-/bin/su -s /bin/bash -c ". /etc/journeymonitor/app-analyze-env.sh && /usr/bin/nohup /bin/bash /opt/journeymonitor/analyze/api-1.0-SNAPSHOT/bin/api >> /var/tmp/journeymonitor-analyze-api.log 2>&1 &" journeymonitor &
+/usr/bin/nohup /bin/su -s /bin/bash -c ". /etc/journeymonitor/app-analyze-env.sh && /usr/bin/nohup /opt/journeymonitor/analyze/api-1.0-SNAPSHOT/bin/api >> /var/tmp/journeymonitor-analyze-api.log 2>&1 &" journeymonitor &
 
 echo "Debug: Reached end of 10-deploy-production script"
