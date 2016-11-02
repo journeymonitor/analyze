@@ -1,6 +1,6 @@
 package com.journeymonitor.analyze.spark
 
-import java.util.Calendar
+import com.datastax.driver.core.Session
 import com.datastax.spark.connector._
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
@@ -90,14 +90,7 @@ object SparkApp {
     conf.set("spark.cassandra.connection.host", cassandraHost)
     val sc = new SparkContext(conf)
 
-    val cal = Calendar.getInstance()
-    cal.add(Calendar.DATE, -1)
-    val oneDayAgo: java.util.Date = cal.getTime
-
-    val rowsRDD = sc.cassandraTable("analyze", "testresults").filter { row =>
-      val datetimeRun = row.get[java.util.Date]("datetime_run")
-      datetimeRun.after(oneDayAgo)
-    }
+    val rowsRDD = sc.cassandraTable("analyze", "testresults")
 
     // Create RDD with a tuple of Testcase ID, Testresult ID, DateTime of Run, HAR per entry
     // Not calling .cache() because that results in OOM
@@ -136,6 +129,14 @@ object SparkApp {
         "number_of_500"           as "numberOfRequestsWithStatus500"
       )
     )
+
+    val cassandraConnector = rowsRDD.connector
+    rowsRDD.foreachPartition { partition =>
+      val session: Session = cassandraConnector.openSession
+      partition.foreach {
+        row => session.execute("DELETE FROM analyze.testresults WHERE testresult_id = '" + row.getString("testresult_id") + "';")
+      }
+    }
 
     sc.stop()
 
