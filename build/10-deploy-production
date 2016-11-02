@@ -12,8 +12,8 @@ cd $2
 
 /usr/bin/cqlsh ${JOURNEYMONITOR_ANALYZE_CASSANDRA_CQLSH_HOST} -e "CREATE KEYSPACE IF NOT EXISTS analyze WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };" || exit 1
 
-/usr/bin/sbt "project common" "run" || exit 1 # This applies Pillar migrations for test and prod env
-/usr/bin/sbt "project common" "test" || exit 1
+/usr/bin/sbt "project common" "run" || exit 1 # This applies Pillar migrations for test and prod env
+/usr/bin/sbt "project common" "test" || exit 1
 /usr/bin/sbt "project importer" "assembly" || exit 1 # This also runs all tests
 /usr/bin/sbt "project spark" "assembly" || exit 1 # This also runs all tests
 /usr/bin/sbt "project api" "test" "universal:packageZipTarball" || exit 1
