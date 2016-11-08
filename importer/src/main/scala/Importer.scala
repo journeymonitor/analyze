@@ -66,7 +66,7 @@ object Importer {
               line
             }
             val entryJson = parse(normalizedLine)
-            val format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            val format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
             val datetimeRun = format.parse((entryJson \ "datetimeRun").extract[String])
             val boundStmt = stmt.bind(
               (entryJson \ "testcaseId").extract[String],
