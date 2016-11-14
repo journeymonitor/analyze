@@ -6,9 +6,6 @@ import com.datastax.driver.core.querybuilder.QueryBuilder._
 import com.datastax.driver.core.{ResultSet, Row, Session}
 import com.journeymonitor.analyze.common.models.Model
 
-import scala.collection.JavaConversions._
-import scala.util.Try
-
 abstract class CassandraRepository[M <: Model, I](session: Session, val tablename: String, partitionKeyName: String) {
   def rowToModel(row: Row): M
 
@@ -31,14 +28,13 @@ abstract class CassandraRepository[M <: Model, I](session: Session, val tablenam
     try {
       fn((actualOriginalNumberOfTries - numberOfTries) + 1)
     } catch {
-      case ex: java.util.concurrent.ExecutionException => {
+      case ex: java.util.concurrent.ExecutionException =>
         ex.getCause match {
           case e @ (_ : ReadTimeoutException | _: NoHostAvailableException) => {
             if (numberOfTries > 1) retry(numberOfTries - 1, Some(actualOriginalNumberOfTries))(fn)
             else throw e
           }
         }
-      }
     }
   }
 
