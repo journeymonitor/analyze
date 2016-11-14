@@ -6,7 +6,7 @@ import java.util.Date
 import akka.stream.ActorMaterializer
 import com.journeymonitor.analyze.api.AppComponents
 import com.journeymonitor.analyze.common.models.StatisticsModel
-import com.journeymonitor.analyze.common.repositories.{Repository, StatisticsRepository}
+import com.journeymonitor.analyze.common.repositories.StatisticsRepository
 import org.scalatestplus.play._
 import play.api
 import play.api.ApplicationLoader.Context
@@ -23,7 +23,7 @@ abstract class AkkaTestkitSupport extends TestKit(ActorSystem()) with ImplicitSe
   def terminateActorSystem() = system.terminate()
 }
 
-class MockStatisticsRepository extends Repository[StatisticsModel, String] with StatisticsRepository {
+class MockStatisticsRepository extends StatisticsRepository {
 
   class MockEmptyModelIterator extends Iterator[StatisticsModel] {
     def next(): StatisticsModel = {
@@ -41,18 +41,6 @@ class MockStatisticsRepository extends Repository[StatisticsModel, String] with 
     }
 
     def hasNext = calls < 2
-  }
-
-  override def getNById(id: String, n: Int): Try[List[StatisticsModel]] = {
-    Try {
-      id match {
-        case "testcaseWithFailure" => throw new Exception("Error in mock")
-        case "testcaseWithoutStatistics" => List.empty[StatisticsModel]
-        case id => List(
-          StatisticsModel("mocked-" + id, new Date(1456006032000L), 987, 123, 456, 789)
-        )
-      }
-    }
   }
 
   override def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[Iterator[StatisticsModel]] = {

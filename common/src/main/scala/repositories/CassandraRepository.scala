@@ -9,8 +9,7 @@ import com.journeymonitor.analyze.common.models.Model
 import scala.collection.JavaConversions._
 import scala.util.Try
 
-abstract class CassandraRepository[M <: Model, I](session: Session, val tablename: String, partitionKeyName: String)
-  extends Repository[M, I] {
+abstract class CassandraRepository[M <: Model, I](session: Session, val tablename: String, partitionKeyName: String) {
   def rowToModel(row: Row): M
 
   private def getNBySinglePartitionKeyValue(partitionKeyValue: I, n: Int, nthTry: Int): ResultSet = {
@@ -27,25 +26,19 @@ abstract class CassandraRepository[M <: Model, I](session: Session, val tablenam
   }
 
   // Based on http://stackoverflow.com/a/7931459/715256
-  private def retry[T](numberOfTries: Int, originalNumberOfTries: Option[Int] = None)(fn: (Int) => T): T = {
+  def retry[T](numberOfTries: Int, originalNumberOfTries: Option[Int] = None)(fn: (Int) => T): T = {
     val actualOriginalNumberOfTries = originalNumberOfTries.getOrElse(numberOfTries)
     try {
       fn((actualOriginalNumberOfTries - numberOfTries) + 1)
     } catch {
-      case e @ (_ : ReadTimeoutException | _: NoHostAvailableException) => {
-        if (numberOfTries > 1) retry(numberOfTries - 1, Some(actualOriginalNumberOfTries))(fn)
-        else throw e
+      case ex: java.util.concurrent.ExecutionException => {
+        ex.getCause match {
+          case e @ (_ : ReadTimeoutException | _: NoHostAvailableException) => {
+            if (numberOfTries > 1) retry(numberOfTries - 1, Some(actualOriginalNumberOfTries))(fn)
+            else throw e
+          }
+        }
       }
-    }
-  }
-
-  override def getNById(id: I, n: Int): Try[List[M]] = {
-    Try {
-      val func = (nthTry: Int) => {
-        val rows = getNBySinglePartitionKeyValue(id, n, nthTry).all().toList
-        rows.map(row => rowToModel(row))
-      }
-      retry(3)(func)
     }
   }
 

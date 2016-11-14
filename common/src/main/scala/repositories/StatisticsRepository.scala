@@ -47,23 +47,6 @@ class StatisticsCassandraRepository(session: Session)
       row.getInt("number_of_500"))
   }
 
-  // Based on http://stackoverflow.com/a/7931459/715256
-  private def retry[T](numberOfTries: Int, originalNumberOfTries: Option[Int] = None)(fn: (Int) => T): T = {
-    val actualOriginalNumberOfTries = originalNumberOfTries.getOrElse(numberOfTries)
-    try {
-      fn((actualOriginalNumberOfTries - numberOfTries) + 1)
-    } catch {
-      case ex: java.util.concurrent.ExecutionException => {
-        ex.getCause match {
-          case e @ (_ : ReadTimeoutException | _: NoHostAvailableException) => {
-            if (numberOfTries > 1) retry(numberOfTries - 1, Some(actualOriginalNumberOfTries))(fn)
-            else throw e
-          }
-        }
-      }
-    }
-  }
-
   private def getAllForTestcaseIdAndDayBucketSinceDatetime(testcaseId: String, dayBucket: String, datetime: java.util.Date, nthTry: Int): ResultSetFuture = {
     session.executeAsync(
       select()
