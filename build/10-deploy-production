@@ -25,10 +25,10 @@ cp api/target/universal/api-1.0-SNAPSHOT.tgz /opt/journeymonitor/analyze/
 /bin/kill `cat /var/tmp/journeymonitor-analyze-api.pid`
 /bin/sleep 10
 /bin/kill -9 `cat /var/tmp/journeymonitor-analyze-api.pid`
-/bin/rm /var/tmp/journeymonitor-analyze-api.pid
+/bin/rm -f /var/tmp/journeymonitor-analyze-api.pid
 cd /opt/journeymonitor/analyze/
 /bin/tar xvfz api-1.0-SNAPSHOT.tgz
 
-/usr/bin/nohup /bin/su -s /bin/bash -c ". /etc/journeymonitor/app-analyze-env.sh && /opt/journeymonitor/analyze/api-1.0-SNAPSHOT/bin/api >> /var/tmp/journeymonitor-analyze-api.log 2>&1" journeymonitor &
+/usr/bin/nohup /bin/su -s /bin/bash -c ". /etc/journeymonitor/app-analyze-env.sh && /opt/journeymonitor/analyze/api-1.0-SNAPSHOT/bin/api -Djava.rmi.server.hostname=10.31.32.81 >> /var/tmp/journeymonitor-analyze-api.log 2>&1" journeymonitor &
 
 exit

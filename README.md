@@ -20,6 +20,7 @@ Please see [ABOUT.md](https://github.com/journeymonitor/infra/blob/master/ABOUT.
 
 - `cqlsh -e "CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };"`
 - `cqlsh -e "CREATE KEYSPACE IF NOT EXISTS analyze WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };"`
+- `make migrations`
 
 Pillar-based Cassandra migration scripts live in `common/src/main/resources/migrations`. They are automatically applied
 whenever an application starts that uses the `CassandraClient` object.
@@ -33,7 +34,7 @@ whenever an application starts that uses the `CassandraClient` object.
 
 #### Populate local Cassandra with dummy statistics
 
-- `for i in `seq 1970 2015`; do for j in `seq -w 1 1 28`; do for k in `seq -w 1 1 59`; do echo "insert into statistics (testcase_id, day_bucket, testresult_id, testresult_datetime_run, number_of_200) values ('a', '2016-02-18', 'trDAY-YEAR', 'YEAR-02-DAY 12:MINUTE:31+0000', 15);" | sed "s/YEAR/$i/g" | sed "s/DAY/$j/g" | sed "s/MINUTE/$k/g"; done; done; done | cqlsh -k analyze`
+- `for i in `seq 1970 2015`; do for j in `seq -w 1 1 28`; do for k in `seq -w 1 1 59`; do echo "insert into statistics (testcase_id, day_bucket, testresult_id, testresult_datetime_run, number_of_200) values ('a', 'YEAR-02-DAY', 'trDAY-YEAR', 'YEAR-02-DAY 12:MINUTE:31+0000', 15);" | sed "s/YEAR/$i/g" | sed "s/DAY/$j/g" | sed "s/MINUTE/$k/g"; done; done; done | cqlsh -k analyze`
 
 
 #### Run HAR analyzer on local Spark cluster
