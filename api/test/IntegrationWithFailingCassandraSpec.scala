@@ -21,7 +21,7 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
 
   // TODO: Problematic if test case runs at 23:59:59...
   val yesterday = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
-  yesterday.roll(Calendar.DAY_OF_MONTH, -1)
+  yesterday.add(Calendar.DATE, -1)
   val yesterdayDaybucket = Util.yMd(yesterday)
   val yesterdayTimestamp = yesterday.getTime.getTime / 1000 * 1000
   val yesterdayDatetime = Util.fullDatetimeWithRfc822Tz(yesterday)
