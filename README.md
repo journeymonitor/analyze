@@ -57,6 +57,11 @@ On the production cluster master:
 - `./bin/spark-shell --packages com.datastax.spark:spark-cassandra-connector_2.11:1.5.0-M2,org.json4s:json4s-native_2.11:3.3.0 --master spark://service-misc-experiments-1:7077 --conf spark.cassandra.connection.host=$JOURNEYMONITOR_ANALYZE_SPARK_CASSANDRAHOST`
 
 
+#### Run API with JMX exposed
+
+- `/usr/bin/nohup /bin/su -s /bin/bash -c ". /etc/journeymonitor/app-analyze-env.sh && /opt/journeymonitor/analyze/api-1.0-SNAPSHOT/bin/api -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=1098 >> /var/tmp/journeymonitor-analyze-api.log 2>&1" journeymonitor &`
+
+
 ### Spark behaviour
 
 This is how an executor queries the database:
