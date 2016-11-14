@@ -35,6 +35,6 @@ object Util {
       l += yMd(current)
     }
 
-    l.toSeq.reverse
+    l.reverse
   }
 }
