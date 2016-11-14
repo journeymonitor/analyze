@@ -34,7 +34,7 @@ whenever an application starts that uses the `CassandraClient` object.
 
 #### Populate local Cassandra with dummy statistics
 
-- `for i in `seq 1970 2015`; do for j in `seq -w 1 1 28`; do for k in `seq -w 1 1 59`; do echo "insert into statistics (testcase_id, day_bucket, testresult_id, testresult_datetime_run, number_of_200) values ('a', 'YEAR-02-DAY', 'trDAY-YEAR', 'YEAR-02-DAY 12:MINUTE:31+0000', 15);" | sed "s/YEAR/$i/g" | sed "s/DAY/$j/g" | sed "s/MINUTE/$k/g"; done; done; done | cqlsh -k analyze`
+- `for YEAR in `seq 2016 $(date +%Y)`; do for MONTH in `seq -w 1 1 12`; do for DAY in `seq -w 1 1 28`;  do for HOUR in `seq -w 0 1 23`; do echo "insert into statistics (testcase_id, day_bucket, testresult_id, testresult_datetime_run, number_of_200) values ('a', 'YEAR-MONTH-DAY', 'trDAY-YEAR', 'YEAR-MONTH-DAY HOUR:00:00+0000', 15);" | sed "s/YEAR/$YEAR/g" | sed "s/MONTH/$MONTH/g" | sed "s/DAY/$DAY/g" | sed "s/HOUR/$HOUR/g"; done; done; done; done | cqlsh -k analyze`
 
 
 #### Run HAR analyzer on local Spark cluster
