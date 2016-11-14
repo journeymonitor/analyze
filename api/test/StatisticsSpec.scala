@@ -1,7 +1,7 @@
 package com.journeymonitor.analyze.api.test
 
 import java.io.File
-import java.util.Date
+import java.util.{Calendar, Date}
 
 import akka.stream.ActorMaterializer
 import com.journeymonitor.analyze.api.AppComponents
@@ -44,6 +44,15 @@ class MockStatisticsRepository extends StatisticsRepository {
   }
 
   override def getAllForTestcaseIdSinceDatetime(testcaseId: String, datetime: java.util.Date): Try[Iterator[StatisticsModel]] = {
+    // The Statistics controller must ensure that no matter what, the repository is only asked for the last 30 days at max.
+    val calendar30DaysAgo = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+    calendar30DaysAgo.add(Calendar.DATE, -30)
+    calendar30DaysAgo.add(Calendar.MINUTE, -1) // Because we never now for sure how long test cases take, we add some buffer.
+    val date30DaysAgo = calendar30DaysAgo.getTime
+    if (datetime.before(date30DaysAgo)) {
+      throw new Exception(s"Error in mock: minTestresultDatetimeRun was not limited - expected $date30DaysAgo, got $datetime.")
+    }
+
     Try {
       if (testcaseId == "testcaseWithFailure") {
         throw new Exception("Error in mock")

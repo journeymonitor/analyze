@@ -1,6 +1,7 @@
 package com.journeymonitor.analyze.api.controllers
 
 import java.text.SimpleDateFormat
+import java.util.Calendar
 
 import akka.stream.scaladsl.Source
 import com.journeymonitor.analyze.common.models.StatisticsModel
@@ -28,16 +29,26 @@ class Statistics(statisticsRepository: StatisticsRepository) extends Controller 
     Future {
       val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ")
 
-      // TODO: If no datetime is given, or a datetime from really long ago(tm), then
-      // we are going to issue a lot of (unneeded) queries (one for each day).
-      // Therefore, we need to decide on a maximum range (say, 100 days ago) for this
-      // case, probably even returning a 400 or 500 error.
-
       Try {
         sdf.parse(minTestresultDatetimeRun)
       } match {
-        case Success(datetime) =>
-          statisticsRepository.getAllForTestcaseIdSinceDatetime(testcaseId, datetime) match {
+        case Success(requestedMinTestresultDatetimeRunAsDate) =>
+
+          /* If clients do not limit the request date or request results from many days ago,
+             then we potentially have to run a huge amount of db queries (one for each day).
+             Because this makes the whole operation really expensive, we never try to retrieve
+             data older than 30 days.
+           */
+          val calendar30DaysAgo = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+          calendar30DaysAgo.add(Calendar.DATE, -30)
+          val date30DaysAgo = calendar30DaysAgo.getTime
+          val datetimeAsDateForDbRequest =
+            if (date30DaysAgo.after(requestedMinTestresultDatetimeRunAsDate))
+              date30DaysAgo
+            else
+              requestedMinTestresultDatetimeRunAsDate
+
+          statisticsRepository.getAllForTestcaseIdSinceDatetime(testcaseId, datetimeAsDateForDbRequest) match {
 
             case Success(statisticsModelIterator: Iterator[StatisticsModel]) =>
               val modelsAsStringsIterator: Iterator[String] = for (statisticsModel <- statisticsModelIterator)
