@@ -9,7 +9,7 @@ libraryDependencies ++= Seq(
   cache,
   ws,
   "org.scalatestplus" %% "play" % "1.4.0-M4" % "test",
-  "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.8",
+  "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.10.3",
   "org.scassandra" % "java-client" % "0.11.0", // depending on this globally in /build.sbt results in "Akka JAR version [2.3.13] does not match the provided config version [2.3.9]"
   "com.typesafe.akka" %% "akka-testkit" % "2.4.2"
 )
