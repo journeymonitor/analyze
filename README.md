@@ -23,7 +23,11 @@ Please see [ABOUT.md](https://github.com/journeymonitor/infra/blob/master/ABOUT.
 - `make migrations`
 
 Pillar-based Cassandra migration scripts live in `common/src/main/resources/migrations`. They are automatically applied
-whenever an application starts that uses the `CassandraClient` object.
+whenever an application starts that uses the `CassandraClient` object. However, there is a caveat with this: If you run
+`sbt test` on the root sbt project, several C* connections are created simultaneously, and each will try to apply the
+migrations. This may lead to a race condition, resulting in
+`org.apache.cassandra.exceptions.ConfigurationException: Column family ID mismatch` errors. Use `make migrations` to
+create all table structures using a single connection.
 
 
 #### Feed sample testresults into local Cassandra
