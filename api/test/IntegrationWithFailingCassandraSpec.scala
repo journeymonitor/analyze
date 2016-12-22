@@ -149,7 +149,7 @@ class IntegrationWithFailingCassandraSpec extends PlaySpec with OneBrowserPerSui
       .build()
     )
 
-    val uri = CassandraConnectionUri("cassandra://localhost:8042/scassandra")
+    val uri = CassandraConnectionUri("cassandra://127.0.0.1:8042/scassandra")
     val session = CassandraClient.createSessionAndInitKeyspace(uri)
 
     override def cassandraSession = session

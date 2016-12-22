@@ -10,7 +10,7 @@ class ImporterSpec extends FunSpec with Matchers {
     it("should work if the file is valid") {
       val uriString = sys.env.getOrElse(
         "JOURNEYMONITOR_ANALYZE_CASSANDRAURI_TEST",
-        "cassandra://localhost:9042/test"
+        "cassandra://127.0.0.1:9042/test"
       )
       val uri = CassandraConnectionUri(uriString)
       val firstSession = CassandraClient.createSessionAndInitKeyspace(uri)

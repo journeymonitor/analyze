@@ -21,8 +21,8 @@ lazy val testDependencies = Seq (
 )
 
 lazy val cassandraDependencies = Seq (
-  "com.datastax.cassandra" % "cassandra-driver-core" % "2.1.10.3",
-  "com.chrisomeara" % "pillar_2.11" % "2.0.1"
+  "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.2",
+  "de.kaufhof" %% "pillar" % "3.3.0"
 )
 
 lazy val json4sDependencies = Seq (

@@ -18,7 +18,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
   val currentYearAndMonth = sdf.format(calendarToday.getTime)
 
   before {
-    val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_CASSANDRAURI_TEST", "cassandra://localhost:9042/test")
+    val uriString = sys.env.getOrElse("JOURNEYMONITOR_ANALYZE_CASSANDRAURI_TEST", "cassandra://127.0.0.1:9042/test")
     val uri = CassandraConnectionUri(uriString)
     val session = CassandraClient.createSessionAndInitKeyspace(uri)
 

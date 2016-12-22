@@ -1,7 +1,7 @@
 package com.journeymonitor.analyze.common
 
-import com.chrisomeara.pillar._
 import com.datastax.driver.core.Session
+import de.kaufhof.pillar.{Migrator, Parser, Registry, SimpleStrategy}
 
 object Pillar {
 
@@ -27,7 +27,7 @@ object Pillar {
     migrator.initialize(
       session,
       keyspace,
-      new ReplicationOptions(Map("class" -> "SimpleStrategy", "replication_factor" -> replicationFactor))
+      SimpleStrategy(replicationFactor)
     )
   }
 

@@ -40,7 +40,7 @@ class StatisticsCassandraRepository(session: Session)
   override def rowToModel(row: Row): StatisticsModel = {
     StatisticsModel(
       row.getString("testresult_id"),
-      row.getDate("testresult_datetime_run"),
+      row.getTimestamp("testresult_datetime_run"),
       row.getInt("runtime_milliseconds"),
       row.getInt("number_of_200"),
       row.getInt("number_of_400"),
