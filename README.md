@@ -16,6 +16,11 @@ Please see [ABOUT.md](https://github.com/journeymonitor/infra/blob/master/ABOUT.
 
 ### Hints for local development environment
 
+#### Using Cassandra via Docker
+
+- `docker run --name cassandra -p 127.0.0.1:7000:7000 -p 127.0.0.1:7001:7001 -p 127.0.0.1:7199:7199 -p 127.0.0.1:9042:9042 -p 127.0.0.1:9160:9160 -d cassandra:2.1`
+- `docker exec cassandra cqlsh`
+
 #### Prepare Cassandra
 
 - `cqlsh -e "CREATE KEYSPACE IF NOT EXISTS test WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };"`
@@ -53,12 +58,19 @@ create all table structures using a single connection.
 #### Run Spark shell with dependencies
 
 - cd to the root folder of your Spark installation
-- `./bin/spark-shell --packages com.datastax.spark:spark-cassandra-connector_2.11:1.5.0-M2,org.json4s:json4s-native_2.11:3.3.0`
+- `./bin/spark-shell --packages com.datastax.spark:spark-cassandra-connector_2.11:1.5.0-M2,org.json4s:json4s-native_2.11:3.3.0 --conf spark.cassandra.connection.host=127.0.0.1`
 
 On the production cluster master:
 - `source /etc/journeymonitor/app-analyze-env.sh`
 - `cd /opt/spark-1.5.1-bin-hadoop-2.6_scala-2.11`
 - `./bin/spark-shell --packages com.datastax.spark:spark-cassandra-connector_2.11:1.5.0-M2,org.json4s:json4s-native_2.11:3.3.0 --master spark://service-misc-experiments-1:7077 --conf spark.cassandra.connection.host=$JOURNEYMONITOR_ANALYZE_SPARK_CASSANDRAHOST`
+
+Within the shell, proceed as follows to work with data in Cassandra:
+
+    import com.datastax.spark.connector._
+    import com.datastax.spark.connector.cql._
+    val rowsRDD = sc.cassandraTable("analyze", "testresults")
+    rowsRDD.count
 
 
 #### Run API with JMX exposed
