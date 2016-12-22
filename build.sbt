@@ -29,8 +29,11 @@ lazy val json4sDependencies = Seq (
   "org.json4s" %% "json4s-jackson" % "3.2.10"
 )
 
+
 lazy val sparkDependencies = Seq (
   "org.apache.spark" %% "spark-core" % "1.5.1" % "provided",
+  // Force netty version.  This avoids some Spark netty dependency problem ("java.lang.VerifyError: class io.netty.channel.nio.NioEventLoop overrides final method pendingTasks.()I")
+  "io.netty" % "netty-all" % "4.0.37.Final",
   "com.datastax.spark" %% "spark-cassandra-connector" % "1.5.0-M2"
 )
 
