@@ -34,7 +34,8 @@ lazy val sparkDependencies = Seq (
   "org.apache.spark" %% "spark-core" % "1.5.1" % "provided",
   // Force netty version.  This avoids some Spark netty dependency problem ("java.lang.VerifyError: class io.netty.channel.nio.NioEventLoop overrides final method pendingTasks.()I")
   "io.netty" % "netty-all" % "4.0.37.Final",
-  "com.datastax.spark" %% "spark-cassandra-connector" % "1.5.1"
+  // 1.5.0 and 1.5.1 result in "missing or invalid dependency detected while loading class file 'package.class'." (see https://datastax-oss.atlassian.net/browse/SPARKC-358)
+  "com.datastax.spark" %% "spark-cassandra-connector" % "1.5.0-RC1"
 )
 
 
