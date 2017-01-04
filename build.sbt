@@ -8,11 +8,11 @@ val commonSettings = Seq(
   scalacOptions := Seq("-target:jvm-1.8", "-unchecked", "-deprecation", "-encoding", "utf8"),
   // stole the following from https://github.com/datastax/spark-cassandra-connector/pull/858/files
   // in order to avoid assembly merge errors with netty
-  assemblyMergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-    {
-      case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.last
-      case x => old(x)
-    }
+  assemblyMergeStrategy in assembly := {
+    case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.last
+    case x =>
+      val oldStrategy = (assemblyMergeStrategy in assembly).value
+      oldStrategy(x)
   }
 )
 
@@ -22,7 +22,8 @@ lazy val testDependencies = Seq (
 
 lazy val cassandraDependencies = Seq (
   "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.2",
-  "de.kaufhof" %% "pillar" % "3.3.0"
+  // Exclusion of jline needed to avoid assembly deduplication errors for libjansi.so, libjansi.jnilib, jansi.dll
+  "de.kaufhof" %% "pillar" % "3.3.0" exclude("jline", "jline")
 )
 
 lazy val json4sDependencies = Seq (
