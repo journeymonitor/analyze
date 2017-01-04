@@ -22,7 +22,6 @@ lazy val testDependencies = Seq (
 
 lazy val cassandraDependencies = Seq (
   "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.2",
-  // Exclusion of jline needed to avoid assembly deduplication errors for libjansi.so, libjansi.jnilib, jansi.dll
   "de.kaufhof" %% "pillar" % "3.3.0" exclude("jline", "jline")
 )
 
@@ -33,19 +32,12 @@ lazy val json4sDependencies = Seq (
 
 lazy val sparkDependencies = Seq (
   "org.apache.spark" %% "spark-core" % "1.5.1" % "provided",
-  // Force netty version.  This avoids some Spark netty dependency problem ("java.lang.VerifyError: class io.netty.channel.nio.NioEventLoop overrides final method pendingTasks.()I")
-  "io.netty" % "netty-all" % "4.0.37.Final",
-  // 1.5.0 and 1.5.1 result in "missing or invalid dependency detected while loading class file 'package.class'." (see https://datastax-oss.atlassian.net/browse/SPARKC-358)
-  "com.datastax.spark" %% "spark-cassandra-connector" % "1.5.0-RC1"
+  "com.datastax.spark" %% "spark-cassandra-connector" % "1.5.0-M2"
 )
 
 
 lazy val common = project
   .settings(commonSettings:_*)
-  .settings(
-    javacOptions := Seq("-source", "1.7", "-target", "1.7"),
-    scalacOptions := Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-encoding", "utf8")
-  )
   .settings(libraryDependencies ++= (testDependencies ++ cassandraDependencies))
 
 lazy val spark = project.in(file("spark"))
@@ -56,7 +48,6 @@ lazy val spark = project.in(file("spark"))
   )
   .settings(libraryDependencies ++= (sparkDependencies ++ json4sDependencies ++ testDependencies))
   .settings(assemblyJarName in assembly := "journeymonitor-analyze-spark-assembly.jar")
-  .dependsOn(common)
 
 lazy val importer = project.in(file("importer"))
   .settings(commonSettings:_*)
@@ -66,6 +57,7 @@ lazy val importer = project.in(file("importer"))
 
 lazy val api = project
   .settings(commonSettings:_*)
+  .settings(libraryDependencies ++= cassandraDependencies)
   .dependsOn(common)
 
 lazy val main = project.in(file("."))

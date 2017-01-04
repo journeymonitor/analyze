@@ -1,12 +1,13 @@
 package com.journeymonitor.analyze.spark
 
-import com.datastax.driver.core.Session
+import java.text.SimpleDateFormat
+import java.util.Calendar
+
 import com.datastax.spark.connector._
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import com.journeymonitor.analyze.common.util.Util
 
 /*
 
@@ -65,13 +66,17 @@ object HarAnalyzer {
   }
 
   def calculateRequestStatistics(testresultsRDD: RDD[Testresult]): RDD[Statistics] = {
+    def yMd(calendar: Calendar): String = {
+      val sdf = new SimpleDateFormat("yyyy-MM-dd")
+      sdf.format(calendar.getTime)
+    }
     testresultsRDD.map(testresult => {
       val entries = (testresult.har \ "log" \ "entries").children
       val cal = java.util.Calendar.getInstance()
       cal.setTime(testresult.datetimeRun)
       Statistics(
         testcaseId = testresult.testcaseId,
-        dayBucket = Util.yMd(cal),
+        dayBucket = yMd(cal),
         testresultDatetimeRun = testresult.datetimeRun,
         testresultId = testresult.testresultId,
         totalRequestTime = calculateTotalRequestTime(entries),
@@ -132,7 +137,7 @@ object SparkApp {
 
     val cassandraConnector = rowsRDD.connector
     rowsRDD.foreachPartition { partition =>
-      val session: Session = cassandraConnector.openSession
+      val session = cassandraConnector.openSession
       partition.foreach {
         row => session.execute("DELETE FROM analyze.testresults WHERE testresult_id = '" + row.getString("testresult_id") + "';")
       }

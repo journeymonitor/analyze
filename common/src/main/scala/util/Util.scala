@@ -13,7 +13,7 @@ object Util {
   }
 
   def yMd(calendar: Calendar): String = {
-    val sdf = new SimpleDateFormat("yyyy-MM-dd");
+    val sdf = new SimpleDateFormat("yyyy-MM-dd")
     sdf.format(calendar.getTime)
   }
 
