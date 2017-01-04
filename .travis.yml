@@ -18,4 +18,5 @@ before_script:
   - make travisci-prod-keyspace
   - make migrations
 after_success:
-  - make travisci-after-success
+  - make travisci-assembly-test
+  - make travisci-create-github-release
