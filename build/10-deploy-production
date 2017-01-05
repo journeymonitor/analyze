@@ -29,4 +29,8 @@ cp api/target/universal/api-1.0-SNAPSHOT.tgz /opt/journeymonitor/analyze/
 cd /opt/journeymonitor/analyze/
 /bin/tar xvfz api-1.0-SNAPSHOT.tgz
 
+# Closing stdout and stderr so simplecd doesn't wait for this script to finish forever due to the background process we are about to launch
+exec 1>&-
+exec 2>&-
+
 /bin/su journeymonitor -s /bin/bash -c ". /etc/journeymonitor/app-analyze-env.sh && /opt/journeymonitor/analyze/api-1.0-SNAPSHOT/bin/api -Djava.rmi.server.hostname=10.31.32.81 >> /var/tmp/journeymonitor-analyze-api.log 2>&1 &"
