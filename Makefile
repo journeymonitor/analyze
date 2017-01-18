@@ -9,7 +9,7 @@ migrations:
 
 travisci-assembly-test:
 	sbt "project importer" "assembly"
-	sbt "project spark" "assembly"
+	cd spark && mvn package
 
 travisci-create-github-release:
 	[ "${TRAVIS_PULL_REQUEST}" = "false" ] && /bin/bash ./build/create-github-release.sh ${GITHUB_TOKEN} travisci-build-${TRAVIS_BRANCH}-${TRAVIS_BUILD_NUMBER} ${TRAVIS_COMMIT} https://travis-ci.org/journeymonitor/analyze/builds/${TRAVIS_BUILD_ID}

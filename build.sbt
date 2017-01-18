@@ -30,24 +30,9 @@ lazy val json4sDependencies = Seq (
 )
 
 
-lazy val sparkDependencies = Seq (
-  "org.apache.spark" %% "spark-core" % "1.5.1" % "provided",
-  "com.datastax.spark" %% "spark-cassandra-connector" % "1.5.0-M2"
-)
-
-
 lazy val common = project
   .settings(commonSettings:_*)
   .settings(libraryDependencies ++= (testDependencies ++ cassandraDependencies))
-
-lazy val spark = project.in(file("spark"))
-  .settings(commonSettings:_*)
-  .settings(
-    javacOptions := Seq("-source", "1.7", "-target", "1.7"),
-    scalacOptions := Seq("-target:jvm-1.7", "-unchecked", "-deprecation", "-encoding", "utf8")
-  )
-  .settings(libraryDependencies ++= (sparkDependencies ++ json4sDependencies ++ testDependencies))
-  .settings(assemblyJarName in assembly := "journeymonitor-analyze-spark-assembly.jar")
 
 lazy val importer = project.in(file("importer"))
   .settings(commonSettings:_*)
@@ -61,4 +46,6 @@ lazy val api = project
   .dependsOn(common)
 
 lazy val main = project.in(file("."))
-  .aggregate(common, spark, importer, api)
+  .aggregate(common, importer, api)
+
+// "spark" is not an sbt sub-project, it's a standalone Maven project - see spark/pom.xml

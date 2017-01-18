@@ -15,11 +15,14 @@ cd $2
 /usr/bin/sbt "project common" "run" || exit 1 # This applies Pillar migrations for test and prod env
 /usr/bin/sbt "project common" "test" || exit 1
 /usr/bin/sbt "project importer" "assembly" || exit 1 # This also runs all tests
-/usr/bin/sbt "project spark" "assembly" || exit 1 # This also runs all tests
 /usr/bin/sbt "project api" "test" "universal:packageZipTarball" || exit 1
 
+cd spark
+/usr/bin/mvn package || exit 1 # This also runs all tests
+cd -
+
 cp importer/target/scala-2.11/journeymonitor-analyze-importer-assembly.jar /opt/journeymonitor/analyze/
-cp spark/target/scala-2.11/journeymonitor-analyze-spark-assembly.jar /opt/journeymonitor/analyze/
+cp spark/target/spark-1.0-SNAPSHOT-jar-with-dependencies.jar /opt/journeymonitor/analyze/
 
 cp api/target/universal/api-1.0-SNAPSHOT.tgz /opt/journeymonitor/analyze/
 /bin/kill `cat /var/tmp/journeymonitor-analyze-api.pid`
