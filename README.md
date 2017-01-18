@@ -62,7 +62,7 @@ create all table structures using a single connection.
 
 On the production cluster master:
 - `source /etc/journeymonitor/app-analyze-env.sh`
-- `cd /opt/spark-1.5.1-bin-hadoop-2.6_scala-2.11`
+- `cd /opt/spark-2.0.2-bin-hadoop2.7`
 - `./bin/spark-shell --packages com.datastax.spark:spark-cassandra-connector_2.11:1.5.0-M2,org.json4s:json4s-native_2.11:3.3.0 --master spark://service-misc-experiments-1:7077 --conf spark.cassandra.connection.host=$JOURNEYMONITOR_ANALYZE_SPARK_CASSANDRAHOST`
 
 Within the shell, proceed as follows to work with data in Cassandra:
