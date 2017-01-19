@@ -22,7 +22,7 @@ class CassandraClientSpec extends FunSpec with Matchers {
       val resultSet = session.execute(selectStmt)
       val row = resultSet.one()
       row.getString("name") should be("foo")
-      //session.execute("TRUNCATE things;")
+      session.execute("TRUNCATE things;")
     }
   }
 

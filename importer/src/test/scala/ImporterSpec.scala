@@ -15,7 +15,7 @@ class ImporterSpec extends FunSpec with Matchers {
       val uri = CassandraConnectionUri(uriString)
       val firstSession = CassandraClient.createSessionAndInitKeyspace(uri)
 
-      //firstSession.execute("TRUNCATE testresults;")
+      firstSession.execute("TRUNCATE testresults;")
 
       Importer.run("./testresults.json", firstSession)
 

@@ -22,7 +22,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
     val uri = CassandraConnectionUri(uriString)
     val session = CassandraClient.createSessionAndInitKeyspace(uri)
 
-    //session.execute("TRUNCATE statistics;")
+    session.execute("TRUNCATE statistics;")
 
     session.execute(
       s"""
