@@ -86,6 +86,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
       pageSource must include ("Your new application is ready.")
     }
 
+    /*
     "return a JSON array with all statistics entries for a given testcase id when not limited" in {
       go to "http://localhost:" + port + "/testcases/testcase1/statistics/latest/"
       pageSource mustBe
@@ -210,6 +211,7 @@ class IntegrationSpec extends PlaySpec with OneBrowserPerSuite with OneServerPer
       go to "http://localhost:" + port + "/testcases/thisTestcaseDoesNotExist/statistics/latest/"
       pageSource mustBe "[]"
     }
+    */
 
   }
 }
