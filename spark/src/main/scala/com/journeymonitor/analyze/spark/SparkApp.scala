@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 
 import com.datastax.spark.connector._
+import org.apache.log4j.LogManager
 import org.apache.spark._
 import org.apache.spark.rdd.RDD
 import org.json4s._
@@ -48,7 +49,18 @@ object HarAnalyzer {
     implicit val formats = org.json4s.DefaultFormats
     val requestCounter = for {
       entry <- entries
-      if ((entry \ "response" \ "status").extract[Int] >= status && (entry \ "response" \ "status").extract[Int] < status + 100)
+      if {
+        try {
+          val entryStatus = (entry \ "response" \ "status").extract[Int]
+          entryStatus >= status && entryStatus < status + 100
+        } catch {
+          case e: Exception => {
+            val log = LogManager.getRootLogger
+            log.warn(s"Problem: '${e.getMessage}' while trying to get the status code at 'response -> status' within ${entry.toString()}")
+            false
+          }
+        }
+      }
     } yield 1
     if (requestCounter.isEmpty) 0 else requestCounter.reduce(_ + _)
     // This is a "normal" Scala reduce, not an RDD reduce.
