@@ -55,8 +55,8 @@ object HarAnalyzer {
           entryStatus >= status && entryStatus < status + 100
         } catch {
           case e: Exception => {
-            val log = LogManager.getRootLogger
-            log.warn(s"Problem: '${e.getMessage}' while trying to get the status code at 'response -> status' within ${entry.toString()}")
+            val logger = LogManager.getLogger(this.getClass)
+            logger.warn(s"Problem: '${e.getMessage}' while trying to get the status code at 'response -> status' within ${entry.toString()}")
             false
           }
         }
@@ -83,10 +83,12 @@ object HarAnalyzer {
       sdf.format(calendar.getTime)
     }
     testresultsRDD.map(testresult => {
+      val logger = LogManager.getLogger(this.getClass)
+      logger.info(s"Starting to extract statistics from testresult ${testresult.testresultId}...")
       val entries = (testresult.har \ "log" \ "entries").children
       val cal = java.util.Calendar.getInstance()
       cal.setTime(testresult.datetimeRun)
-      Statistics(
+      val statistics = Statistics(
         testcaseId = testresult.testcaseId,
         dayBucket = yMd(cal),
         testresultDatetimeRun = testresult.datetimeRun,
@@ -96,6 +98,8 @@ object HarAnalyzer {
         numberOfRequestsWithStatus400 = calculateNumberOfRequestsWithResponseStatus(400, entries),
         numberOfRequestsWithStatus500 = calculateNumberOfRequestsWithResponseStatus(500, entries)
       )
+      logger.info(s"Finished extracting statistics from testresult ${testresult.testresultId}...")
+      statistics
     })
   }
 }
