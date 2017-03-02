@@ -1,6 +1,7 @@
 package com.journeymonitor.analyze.spark
 
 import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
 import com.datastax.spark.connector._
@@ -70,11 +71,21 @@ object HarAnalyzer {
 
   private def calculateTotalRequestTime(entries: List[JsonAST.JValue]): Int = {
     implicit val formats = org.json4s.DefaultFormats
-    val times = for { entry <- entries } yield (entry \ "time").extract[Int]
-    if (times.isEmpty) 0 else times.reduce(_ + _)
-    // This is a "normal" Scala reduce, not an RDD reduce.
-    // Because this method is called from within testresultsRDD.map, the reduce does not happen in the driver,
-    // but in the executors
+
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx")
+
+    val starttimesEpochMilli = for { entry <- entries } yield {
+      val startedDateTime = (entry \ "startedDateTime").extract[String]
+      java.time.ZonedDateTime.parse(startedDateTime, formatter).toInstant.toEpochMilli
+    }
+
+    val endtimesEpochMilli = for { entry <- entries } yield {
+      val startedDateTime = (entry \ "startedDateTime").extract[String]
+      val time = (entry \ "time").extract[Int]
+      java.time.ZonedDateTime.parse(startedDateTime, formatter).toInstant.toEpochMilli + time
+    }
+
+    (endtimesEpochMilli.max - starttimesEpochMilli.min).toInt
   }
 
   def calculateRequestStatistics(testresultsRDD: RDD[Testresult]): RDD[Statistics] = {
