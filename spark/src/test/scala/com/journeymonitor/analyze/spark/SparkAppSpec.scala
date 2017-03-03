@@ -17,6 +17,7 @@ object FixtureGenerator {
         testcaseId = "testcaseId1",
         testresultId = "testresultId1",
         datetimeRun = datetimeRun1,
+        // Note how we expect startedDateTime to sometimes lack milliseconds
         har = parse(
           """
             |{
@@ -27,7 +28,7 @@ object FixtureGenerator {
             |          "status": 200
             |        },
             |        "time": 10,
-            |        "startedDateTime": "2017-03-02T06:10:43.436+01:00"
+            |        "startedDateTime": "2017-03-02T06:10:43+01:00"
             |      },
             |      {
             |        "response": {
@@ -175,7 +176,7 @@ class SparkExampleSpec extends FunSpec with BeforeAndAfter with Matchers {
       statistics(0).testresultDatetimeRun.toString.substring(24) should be("2015")
       statistics(0).numberOfRequestsWithStatus200 should be(1)
       statistics(0).numberOfRequestsWithStatus400 should be(1)
-      statistics(0).totalRequestTime should be(2015)
+      statistics(0).totalRequestTime should be(2451)
 
       statistics(1).testcaseId should be("testcaseId1")
       statistics(1).dayBucket should be("2015-11-18")

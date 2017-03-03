@@ -72,17 +72,28 @@ object HarAnalyzer {
   private def calculateTotalRequestTime(entries: List[JsonAST.JValue]): Int = {
     implicit val formats = org.json4s.DefaultFormats
 
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx")
+    val formatterWithMilliseconds = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx")
+    val formatterWithoutMilliseconds = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssxxx")
 
     val starttimesEpochMilli = for { entry <- entries } yield {
       val startedDateTime = (entry \ "startedDateTime").extract[String]
-      java.time.ZonedDateTime.parse(startedDateTime, formatter).toInstant.toEpochMilli
+      try {
+        java.time.ZonedDateTime.parse(startedDateTime, formatterWithMilliseconds).toInstant.toEpochMilli
+      } catch {
+        case e: java.time.format.DateTimeParseException =>
+          java.time.ZonedDateTime.parse(startedDateTime, formatterWithoutMilliseconds).toInstant.toEpochMilli
+      }
     }
 
     val endtimesEpochMilli = for { entry <- entries } yield {
       val startedDateTime = (entry \ "startedDateTime").extract[String]
       val time = (entry \ "time").extract[Int]
-      java.time.ZonedDateTime.parse(startedDateTime, formatter).toInstant.toEpochMilli + time
+      try {
+        java.time.ZonedDateTime.parse(startedDateTime, formatterWithMilliseconds).toInstant.toEpochMilli + time
+      } catch {
+        case e: java.time.format.DateTimeParseException =>
+          java.time.ZonedDateTime.parse(startedDateTime, formatterWithoutMilliseconds).toInstant.toEpochMilli + time
+      }
     }
 
     (endtimesEpochMilli.max - starttimesEpochMilli.min).toInt
