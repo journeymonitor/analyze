@@ -69,7 +69,7 @@ object HarAnalyzer {
     // but in the executors
   }
 
-  private def calculateTotalRequestTime(entries: List[JsonAST.JValue]): Int = {
+  private def calculateTotalRequestTime(testresultId: String, entries: List[JsonAST.JValue]): Int = {
     implicit val formats = org.json4s.DefaultFormats
 
     val formatterWithMilliseconds = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx")
@@ -96,7 +96,13 @@ object HarAnalyzer {
       }
     }
 
-    (endtimesEpochMilli.max - starttimesEpochMilli.min).toInt
+    if (endtimesEpochMilli.isEmpty || starttimesEpochMilli.isEmpty) {
+      val logger = LogManager.getLogger(this.getClass)
+      logger.info(s"Could not calculate starttimes and/or endtimes for testresult $testresultId")
+      -1
+    } else {
+      (endtimesEpochMilli.max - starttimesEpochMilli.min).toInt
+    }
   }
 
   def calculateRequestStatistics(testresultsRDD: RDD[Testresult]): RDD[Statistics] = {
@@ -115,7 +121,7 @@ object HarAnalyzer {
         dayBucket = yMd(cal),
         testresultDatetimeRun = testresult.datetimeRun,
         testresultId = testresult.testresultId,
-        totalRequestTime = calculateTotalRequestTime(entries),
+        totalRequestTime = calculateTotalRequestTime(testresult.testresultId, entries),
         numberOfRequestsWithStatus200 = calculateNumberOfRequestsWithResponseStatus(200, entries),
         numberOfRequestsWithStatus400 = calculateNumberOfRequestsWithResponseStatus(400, entries),
         numberOfRequestsWithStatus500 = calculateNumberOfRequestsWithResponseStatus(500, entries)
